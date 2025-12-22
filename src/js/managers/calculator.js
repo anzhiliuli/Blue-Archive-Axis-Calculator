@@ -65,11 +65,11 @@ class Calculator {
                 }
                 
                 // 检查当前数据项是否在目标行之后（不包括当前目标行）
-                // 只有当当前itemId大于规则的characterId（目标行ID）时，才应用减费效果
-                const isAfterTargetRow = !itemId || rule.characterId !== itemId;
-                
-                // 如果生效次数未用完且在目标行之后，应用减费
-                if (this.ruleCounters[ruleKey] < rule.effectCount && isAfterTargetRow) {
+            // 只有当当前itemId大于规则的characterId（目标行ID）时，才应用减费效果
+            const isAfterTargetRow = !rule.characterId || itemId > rule.characterId;
+            
+            // 如果生效次数未用完且在目标行之后，应用减费
+            if (this.ruleCounters[ruleKey] < rule.effectCount && isAfterTargetRow) {
                     finalCost -= rule.reductionValue;
                     // 增加计数器
                     this.ruleCounters[ruleKey]++;
