@@ -1258,7 +1258,7 @@
                                     <ul class="space-y-2">
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span>添加、编辑、删除角色</span>
+                                            <span>添加、编辑、删除角色（最多6个）</span>
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
@@ -1266,7 +1266,11 @@
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span>启用回费：配置回费增加百分比（应用到所有角色）</span>
+                                            <span>启用回费：配置回费增加百分比，该百分比会应用到所有角色的回费计算</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>最多只有一个角色可以启用回费功能</span>
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
@@ -1361,7 +1365,7 @@
                                                 </div>
                                                 <div class="flex items-start gap-2">
                                                     <i class="fas fa-arrow-up text-yellow-600 mt-1"></i>
-                                                    <span><strong>回费速度增加</strong>：回费速度的增加量（c/s）</span>
+                                                    <span><strong>回费速度增加</strong>：回费速度的增加量（c/s），应用于目标角色</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1374,11 +1378,15 @@
                                                 </li>
                                                 <li class="flex items-start gap-2">
                                                     <i class="fas fa-check text-blue-600 mt-1"></i>
-                                                    <span>持续 持续时长 秒后结束</span>
+                                                    <span>持续 一定时长后结束</span>
                                                 </li>
                                                 <li class="flex items-start gap-2">
                                                     <i class="fas fa-check text-blue-600 mt-1"></i>
-                                                    <span>期间所有角色的总回费速度增加 指定数值</span>
+                                                    <span>期间目标角色的回费速度增加 指定数值</span>
+                                                </li>
+                                                <li class="flex items-start gap-2">
+                                                    <i class="fas fa-check text-blue-600 mt-1"></i>
+                                                    <span>该增加量会受到启用回费功能的百分比加成影响</span>
                                                 </li>
                                             </ul>
                                         </div>
@@ -1411,26 +1419,29 @@
                                 </div>
                                 
                                 <!-- 时间轴管理 -->
-                                <div class="feature-card bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                    <div class="feature-icon w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-4">
+                                <div class="feature-card bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow opacity-70">
+                                    <div class="feature-icon w-12 h-12 bg-gray-100 text-gray-600 rounded-xl flex items-center justify-center mb-4">
                                         <i class="fas fa-clock text-2xl"></i>
                                     </div>
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-3">时间轴管理</h3>
-                                    <ul class="space-y-2">
-                                        <li class="flex items-start gap-2 text-gray-700">
-                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-3 flex items-center">
+                                        时间轴管理
+                                        <span class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">维护中</span>
+                                    </h3>
+                                    <ul class="space-y-2 text-gray-500">
+                                        <li class="flex items-start gap-2">
+                                            <i class="fas fa-hourglass-half text-gray-400 mt-1"></i>
                                             <span>可视化展示技能释放时间</span>
                                         </li>
-                                        <li class="flex items-start gap-2 text-gray-700">
-                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                        <li class="flex items-start gap-2">
+                                            <i class="fas fa-hourglass-half text-gray-400 mt-1"></i>
                                             <span>实时显示费用变化曲线</span>
                                         </li>
-                                        <li class="flex items-start gap-2 text-gray-700">
-                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                        <li class="flex items-start gap-2">
+                                            <i class="fas fa-hourglass-half text-gray-400 mt-1"></i>
                                             <span>支持时间格式自动转换</span>
                                         </li>
-                                        <li class="flex items-start gap-2 text-gray-700">
-                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                        <li class="flex items-start gap-2">
+                                            <i class="fas fa-hourglass-half text-gray-400 mt-1"></i>
                                             <span>精准计算回费时间</span>
                                         </li>
                                     </ul>
@@ -1450,7 +1461,7 @@
                                 <div class="mb-6">
                                     <h3 class="text-xl font-semibold text-gray-900 mb-4">实时计算功能</h3>
                                     <p class="text-gray-700 mb-4">
-                                        编辑数据项时，系统会根据时间或费用的变化自动计算关联的费用或时间，确保计算结果的准确性和一致性。
+                                        编辑数据项时，系统会根据时间或费用的变化自动计算关联的费用或时间，确保计算结果的准确性和一致性。任何时间或费用的微小变化都会触发自动计算。
                                     </p>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div class="p-4 bg-green-50 rounded-lg border border-green-100">
@@ -1463,7 +1474,7 @@
                                                 <strong class="text-green-900">时间减少 → 费用增加</strong>
                                             </p>
                                             <div class="mt-3 text-xs text-gray-600">
-                                                <div><strong>计算逻辑</strong>：考虑上一个数据项的剩余费用，基于当前时间和上一个时间的时间间隔，使用细粒度时间步长（0.001秒）模拟费用恢复</div>
+                                                <div><strong>计算逻辑</strong>：使用前一行的剩余费用作为初始费用，基于当前时间和上一个时间的时间间隔，考虑所有关联规则和持续回费效果，使用细粒度时间步长（0.001秒）模拟费用恢复</div>
                                             </div>
                                         </div>
                                         <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
@@ -1476,7 +1487,7 @@
                                                 <strong class="text-blue-900">费用减少 → 时间增加</strong>
                                             </p>
                                             <div class="mt-3 text-xs text-gray-600">
-                                                <div><strong>计算逻辑</strong>：基于目标费用和上一个数据项的剩余费用差值，计算需要的时间，使用细粒度时间步长（0.001秒）模拟费用恢复</div>
+                                                <div><strong>计算逻辑</strong>：基于目标费用和前一行的剩余费用差值，考虑所有关联规则和持续回费效果，计算需要的时间，使用细粒度时间步长（0.001秒）模拟费用恢复</div>
                                             </div>
                                         </div>
                                     </div>
@@ -1485,8 +1496,8 @@
                                             <i class="fas fa-info-circle mr-2"></i>支持的时间格式
                                         </h4>
                                         <p class="text-sm text-yellow-700">
-                                            系统支持多种时间格式：<br>
-                                            <strong>MM:SS.fff</strong>（如2:59.000）、<strong>MM:SS</strong>（如2:59）、<br>
+                                            系统支持多种时间格式，自动识别并转换：<br>
+                                            <strong>MM:SS.fff</strong>（如02:59.000）、<strong>MM:SS</strong>（如02:59或2:59）、<br>
                                             <strong>SS.fff</strong>（如59.000）、<strong>SS</strong>（如59）、<strong>纯数字</strong>（如179）
                                         </p>
                                     </div>
@@ -1578,12 +1589,16 @@
                                         <!-- 总回费计算 -->
                                         <div class="formula-item p-4 bg-purple-50 rounded-lg border border-purple-100">
                                             <div class="formula-text font-mono text-gray-900 mb-2">
-                                                <strong>总回费</strong> = 基础回费 × (1 + 回费增加百分比) + Σ瞬间回费数值
+                                                <strong>总回费</strong> = (基础回费 + 固定值增加) × (1 + 总回费增加百分比) + Σ瞬间回费数值
                                             </div>
                                             <div class="text-sm text-gray-600">
                                                 <i class="fas fa-info-circle mr-1"></i>
-                                                回费增加百分比来自<strong>回费效果规则</strong>和<strong>角色属性中的回费增加</strong>：
+                                                回费计算规则说明：
                                                 <ul class="list-disc pl-5 mt-1 space-y-1">
+                                                    <li>基础回费：角色原始回费速度 × 时间间隔</li>
+                                                    <li>固定值增加：来自费用效果规则的固定数值增加，应用于指定角色</li>
+                                                    <li>总回费增加百分比：角色属性中的回费增加百分比与费用效果规则的百分比累加</li>
+                                                    <li>固定值增加也会受到总回费增加百分比的加成</li>
                                                     <li>角色属性中只有一个角色可以设置回费增加百分比（启用回费）</li>
                                                     <li>该百分比会应用到所有角色的回费计算</li>
                                                     <li>回费效果规则可叠加使用</li>
@@ -1621,7 +1636,7 @@
                                                 <i class="fas fa-link mr-2 text-gray-600"></i>
                                                 关联规则对计算的影响
                                             </h4>
-                                            <ul class="space-y-2 text-sm text-gray-700">
+                                            <ul class="space-y-3 text-sm text-gray-700">
                                                 <li class="flex items-start gap-2">
                                                     <i class="fas fa-check text-green-500 mt-1"></i>
                                                     <span><strong>减费效果</strong>：直接降低技能费用，减少实际扣除费用。可设置生效次数，次数用完后效果消失，角色技能费用恢复原值。<strong>注意：后应用的减费效果会覆盖之前的减费效果，而非叠加</strong></span>
@@ -1632,7 +1647,18 @@
                                                 </li>
                                                 <li class="flex items-start gap-2">
                                                     <i class="fas fa-check text-green-500 mt-1"></i>
-                                                    <span><strong>费用效果</strong>：调整回费效果，可设置时间范围和作用对象，与角色属性中的回费增加共同影响总回费</span>
+                                                    <span><strong>费用效果</strong>：调整回费效果，可设置时间范围和作用对象：
+                                                        <ul class="list-disc pl-5 mt-1 space-y-1">
+                                                            <li><strong>固定数值</strong>：直接增加或减少指定角色的回费速度，会受到启用回费的百分比加成影响</li>
+                                                            <li><strong>百分比</strong>：增加或减少回费百分比，与角色属性中的启用回费百分比累加</li>
+                                                            <li><strong>作用范围</strong>：可选择单个或多个角色应用效果</li>
+                                                            <li><strong>时间范围</strong>：在指定的生效时间和持续时长内有效</li>
+                                                        </ul>
+                                                    </span>
+                                                </li>
+                                                <li class="flex items-start gap-2">
+                                                    <i class="fas fa-check text-green-500 mt-1"></i>
+                                                    <span><strong>持续回费</strong>：为指定角色增加持续回费效果，该效果会受到启用回费的百分比加成影响</span>
                                                 </li>
                                             </ul>
                                         </div>
