@@ -107,7 +107,7 @@ class Calculator {
     }
     
     // 应用关联规则费用变化
-    applyRuleCostChanges(characterId, baseCost, itemId = null, costReductionRules = null, costChangeRules = null, useCount = 1) {
+    applyRuleCostChanges(characterId, baseCost, itemId = null, costReductionRules = null, costChangeRules = null, useCount = 1, isPreAddValidation = false) {
         // 如果传入了预筛选的规则，则使用它们，否则获取所有规则
         const rules = this.dataManager.getRules();
         const reductionRules = costReductionRules || rules.filter(rule => rule.type === 'costReduction');
@@ -134,7 +134,8 @@ class Calculator {
             const isRuleApplied = Array.isArray(rule.targetCharacterIds) && rule.targetCharacterIds.includes(characterId);
             if (isRuleApplied) {
                 // 检查当前数据项是否在目标行之后（不包括当前目标行）
-                const isAfterTargetRow = !rule.characterId || itemId > rule.characterId;
+                // 如果是预添加验证，则不检查itemId条件，直接应用减费规则
+                const isAfterTargetRow = isPreAddValidation || !rule.characterId || itemId > rule.characterId;
                 if (isAfterTargetRow) {
                     matchedRule = rule;
                     break; // 找到最后一个匹配的规则，跳出循环

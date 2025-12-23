@@ -1659,12 +1659,13 @@ class EventListeners {
             if (character) {
                 // 计算基础费用
                 const baseCost = character.skillCost;
-                // 应用减费规则，计算最小可能的费用扣除
-                const minCostDeduction = this.calculator.applyRuleCostChanges(characterId, baseCost);
+                // 应用减费规则，计算实际的费用扣除额
+                // 设置isPreAddValidation为true，确保在添加数据项之前能正确计算减费效果
+                const actualCostDeduction = this.calculator.applyRuleCostChanges(characterId, baseCost, null, null, null, 1, true);
                 
-                // 确保触发费用不小于最小费用扣除
-                if (cost < minCostDeduction) {
-                    this.modalManager.showToast(`触发费用不能小于应用减费规则后的费用扣除（最小需要${minCostDeduction}c）`, 'error');
+                // 确保触发费用不小于实际费用扣除额
+                if (cost < actualCostDeduction) {
+                    this.modalManager.showToast(`触发费用不能小于应用减费规则后的费用扣除（最小需要${actualCostDeduction}c）`, 'error');
                     return;
                 }
             }
@@ -1991,21 +1992,6 @@ class EventListeners {
         // 验证时间必须为正数
         if (formData.time <= 0) {
             return false;
-        }
-        
-        // 验证触发费用不能小于应用减费规则后的费用扣除
-        const character = this.dataManager.getCharacterById(formData.characterId);
-        if (character) {
-            // 计算基础费用
-            const baseCost = character.skillCost;
-            // 应用减费规则，计算最小可能的费用扣除
-            const minCostDeduction = this.calculator.applyRuleCostChanges(formData.characterId, baseCost);
-            
-            // 确保触发费用不小于最小费用扣除
-            if (formData.cost < minCostDeduction) {
-                this.modalManager.showToast(`触发费用不能小于应用减费规则后的费用扣除（最小需要${minCostDeduction}c）`, 'error');
-                return false;
-            }
         }
         
         // 检查触发费用是否小于上一行的剩余费用
