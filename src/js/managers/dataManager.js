@@ -305,6 +305,8 @@ class DataManager {
     deleteDataItem(id) {
         const index = this.dataItems.findIndex(item => item.id === id);
         if (index !== -1) {
+            // 删除关联的规则
+            this.rules = this.rules.filter(rule => rule.characterId !== id);
             return this.dataItems.splice(index, 1)[0];
         }
         return null;
@@ -312,6 +314,9 @@ class DataManager {
 
     // 批量删除数据项
     deleteDataItems(ids) {
+        // 删除关联的规则
+        this.rules = this.rules.filter(rule => !ids.includes(rule.characterId));
+        // 删除数据项
         this.dataItems = this.dataItems.filter(item => !ids.includes(item.id));
     }
 
