@@ -332,7 +332,7 @@ class Calculator {
         let currentCost = 0;
         
         // 更新数据管理器中的当前费用为0
-        this.dataManager.currentCost = currentCost;
+        this.dataManager.setCurrentCost(currentCost);
         
         // 不预计算角色回费速度，因为需要根据当前时间动态计算
         // 费用效果规则需要根据具体时间点进行判断，所以在每次需要时重新计算
@@ -485,7 +485,7 @@ class Calculator {
         });
         
         // 更新数据管理器中的当前费用
-        this.dataManager.currentCost = currentCost;
+        this.dataManager.setCurrentCost(currentCost);
         
         return items;
     }

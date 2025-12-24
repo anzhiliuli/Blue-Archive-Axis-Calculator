@@ -218,12 +218,6 @@ class EventListeners {
             });
         }
 
-        // 批量删除数据项按钮 (当前HTML中未实现)
-        // const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
-        // if (bulkDeleteBtn) {
-        //     bulkDeleteBtn.addEventListener('click', () => this.bulkDeleteDataItems());
-        // }
-
         // 编辑数据项表单提交
         const editDataItemForm = document.getElementById('editDataItemForm');
         if (editDataItemForm) {
@@ -310,7 +304,7 @@ class EventListeners {
                 this.dataManager.setInitializationTime(initialTimeSeconds);
                 
                 // 移除初始费用设定，费用从0开始
-                this.dataManager.currentCost = 0;
+                this.dataManager.setCurrentCost(0);
                 
                 // 获取当前角色列表
                 const characters = this.dataManager.getCharacters();
@@ -329,7 +323,7 @@ class EventListeners {
                 };
                 
                 // 添加到数据管理器
-                this.dataManager.dataItems.push(defaultItem);
+                this.dataManager.pushDataItem(defaultItem);
                 
                 // 确保第一个数据项的时间间隔计算正确
                 this.calculator.recalculateAllItems();
@@ -371,12 +365,6 @@ class EventListeners {
         const clearDataBtn = document.getElementById('clearFilterBtn');
         if (clearDataBtn) {
             clearDataBtn.addEventListener('click', () => this.clearAllFilters());
-        }
-
-        // 添加角色按钮
-        const addCharacterBtn = document.getElementById('addCharacter');
-        if (addCharacterBtn) {
-            addCharacterBtn.addEventListener('click', () => this.showAddCharacterModal());
         }
         
         // 数据筛选展开/收起按钮
@@ -492,23 +480,7 @@ class EventListeners {
         
         // 分页按钮事件处理
         this.setupPaginationListeners();
-        
-        // 新建项目按钮
-        const newProjectBtn = document.getElementById('newProject');
-        if (newProjectBtn) {
-            newProjectBtn.addEventListener('click', () => {
-                this.modalManager.showConfirmModal(
-                    '新建项目',
-                    '确定要新建项目吗？当前未保存的数据将丢失。',
-                    () => {
-                        this.dataManager.clearAllData();
-                        this.uiRenderer.refreshAll();
-                        this.modalManager.showToast('新项目已创建', 'success');
-                    }
-                );
-            });
-        }
-        
+               
         // 退出应用按钮
         const exitAppBtn = document.getElementById('exitApp');
         if (exitAppBtn) {
@@ -528,7 +500,18 @@ class EventListeners {
         const undoActionBtn = document.getElementById('undoAction');
         if (undoActionBtn) {
             undoActionBtn.addEventListener('click', () => {
-                this.modalManager.showToast('撤销功能开发中', 'info');
+                if (this.dataManager.undo()) {
+                    // 重新渲染UI
+                    this.uiRenderer.refreshAll();
+                    // 更新状态信息
+                    if (this.app) {
+                        this.app.updateStatusInfo();
+                    }
+                    // 显示成功提示
+                    this.modalManager.showToast('操作已撤销', 'success');
+                } else {
+                    this.modalManager.showToast('没有可撤销的操作', 'warning');
+                }
             });
         }
         
@@ -536,8 +519,41 @@ class EventListeners {
         const redoActionBtn = document.getElementById('redoAction');
         if (redoActionBtn) {
             redoActionBtn.addEventListener('click', () => {
-                this.modalManager.showToast('重做功能开发中', 'info');
+                if (this.dataManager.redo()) {
+                    // 重新渲染UI
+                    this.uiRenderer.refreshAll();
+                    // 更新状态信息
+                    if (this.app) {
+                        this.app.updateStatusInfo();
+                    }
+                    // 显示成功提示
+                    this.modalManager.showToast('操作已重做', 'success');
+                } else {
+                    this.modalManager.showToast('没有可重做的操作', 'warning');
+                }
             });
+        }
+        
+        // 监听状态变化事件，更新撤销/重做按钮状态
+        document.addEventListener('stateChanged', (event) => {
+            const { canUndo, canRedo } = event.detail;
+            
+            if (undoActionBtn) {
+                undoActionBtn.disabled = !canUndo;
+            }
+            
+            if (redoActionBtn) {
+                redoActionBtn.disabled = !canRedo;
+            }
+        });
+        
+        // 初始化撤销/重做按钮状态
+        if (undoActionBtn) {
+            undoActionBtn.disabled = !this.dataManager.canUndo();
+        }
+        
+        if (redoActionBtn) {
+            redoActionBtn.disabled = !this.dataManager.canRedo();
         }
         
         // 角色预设按钮
@@ -663,23 +679,73 @@ class EventListeners {
         const copyLastItemBtn = document.getElementById('copyLastItemBtn');
         if (copyLastItemBtn) {
             copyLastItemBtn.addEventListener('click', () => {
-                const dataItems = this.dataManager.getDataItems();
-                if (dataItems.length === 0) {
-                    this.modalManager.showToast('没有数据项可复制', 'warning');
-                    return;
+                // 检查数据表是否已初始化
+                if (this.app && !this.app.isDataTableInitialized()) {
+                    this.modalManager.showToast('请先初始化数据表', 'error');
+                } else if (this.dataManager.characters.length === 0) {
+                    this.modalManager.showToast('请先添加角色', 'error');
+                } else {
+                    const dataItems = this.dataManager.getAllDataItems();
+                    if (dataItems.length === 0) {
+                        this.modalManager.showToast('没有数据项可复制', 'warning');
+                        return;
+                    }
+                    
+                    const lastItem = dataItems[dataItems.length - 1];
+                    
+                    // 验证触发费用不能超过最大费用10c
+                    if (lastItem.cost > 10) {
+                        this.modalManager.showToast('触发费用不能超过最大费用10c', 'error');
+                        return;
+                    }
+                    
+                    // 验证触发费用不能小于应用减费规则后的费用扣除
+                    const character = this.dataManager.getCharacterById(lastItem.characterId);
+                    if (character) {
+                        // 计算基础费用
+                        const baseCost = character.skillCost;
+                        // 应用减费规则，计算实际的费用扣除额
+                        // 设置isPreAddValidation为true，确保在添加数据项之前能正确计算减费效果
+                        const actualCostDeduction = this.calculator.applyRuleCostChanges(lastItem.characterId, baseCost, null, null, null, 1, true);
+                        
+                        // 确保触发费用不小于实际费用扣除额
+                        if (lastItem.cost < actualCostDeduction) {
+                            this.modalManager.showToast(`触发费用不能小于应用减费规则后的费用扣除（最小需要${actualCostDeduction}c）`, 'error');
+                            return;
+                        }
+                    }
+                    
+                    // 检查触发费用是否小于上一行的剩余费用
+                    if (dataItems.length > 1) {
+                        const secondLastItem = dataItems[dataItems.length - 2];
+                        if (lastItem.cost < secondLastItem.remainingCost) {
+                            this.modalManager.showToast(`触发费用不能小于上一行的剩余费用（当前剩余费用：${secondLastItem.remainingCost}c）`, 'error');
+                            return;
+                        }
+                    }
+                    
+                    const newItem = {
+                        characterId: lastItem.characterId,
+                        cost: lastItem.cost,
+                        action: lastItem.action,
+                        time: lastItem.time + 1 // 默认时间间隔为1秒
+                    };
+                    
+                    this.dataManager.addDataItem(newItem);
+                    
+                    // 重新计算所有数据项
+                    this.calculator.recalculateAllItems();
+                    
+                    // 刷新UI
+                    this.uiRenderer.refreshAll();
+                    
+                    // 更新状态信息
+                    if (this.app) {
+                        this.app.updateStatusInfo();
+                    }
+                    
+                    this.modalManager.showToast('最后一项已复制', 'success');
                 }
-                
-                const lastItem = dataItems[dataItems.length - 1];
-                const newItem = {
-                    ...lastItem,
-                    id: Date.now(),
-                    name: `${lastItem.name} (副本)`,
-                    startTime: lastItem.startTime + 5 // 默认延迟5秒
-                };
-                
-                this.dataManager.addDataItem(newItem);
-                this.uiRenderer.renderDataItemList();
-                this.modalManager.showToast('最后一项已复制', 'success');
             });
         }
         
@@ -979,7 +1045,7 @@ class EventListeners {
                     <div class="flex-1">
                         <h5 class="font-medium">${preset.name}</h5>
                         <div class="text-sm text-gray-500 mt-1">
-                            <div>回复速度: ${preset.costRecoveryRate.toFixed(2)} c/s</div>
+                            <div>回费速度: ${preset.costRecoveryRate.toFixed(2)} c/s</div>
                             <div>技能费用: ${preset.skillCost.toFixed(2)} c</div>
                             <div>回费增加: ${preset.costIncrease.toFixed(2)}%</div>
                         </div>
@@ -1127,7 +1193,7 @@ class EventListeners {
         };
         
         // 保存到数据管理器
-        this.dataManager.continuousChargeData = continuousChargeData;
+        this.dataManager.setContinuousChargeData(continuousChargeData);
         
         // 显示成功提示
         this.modalManager.showToast('持续回费设置已保存', 'success');

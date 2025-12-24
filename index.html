@@ -36,6 +36,34 @@
                 header.classList.add('scrolled');
             }
         });
+        
+        // 检测设备类型并自动缩放网页布局
+        function autoScalePage() {
+            // 检测是否为移动设备或平板设备
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isTablet = /iPad|Android(?!.*Mobile)/i.test(navigator.userAgent);
+            
+            if (isMobile || isTablet) {
+                // 获取屏幕宽度和高度
+                const screenWidth = window.screen.width;
+                const screenHeight = window.screen.height;
+                
+                // 设置合适的缩放比例
+                // 假设桌面布局的最小宽度为1024px
+                const scale = Math.min(screenWidth / 1024, 1);
+                
+                // 调整视口设置
+                const viewport = document.querySelector('meta[name=viewport]');
+                if (viewport) {
+                    viewport.content = `width=device-width, initial-scale=${scale}`;
+                }
+            }
+        }
+        
+        // 页面加载时执行自动缩放
+        window.addEventListener('DOMContentLoaded', autoScalePage);
+        // 窗口大小变化时重新执行自动缩放
+        window.addEventListener('resize', autoScalePage);
     </script>
     
     <!-- 简单的CSS样式，确保下拉菜单可见 -->
@@ -98,18 +126,13 @@
                         </button>
                         <ul id="fileMenu" class="menu-dropdown absolute right-0 mt-2 list-none p-0 m-0" role="menu" aria-labelledby="fileMenuBtn">
                             <li role="none">
-                                <button id="newProject" class="menu-dropdown-item" role="menuitem">
-                                    <i class="fas fa-file"></i>新建项目
-                                </button>
-                            </li>
-                            <li role="none">
                                 <button id="saveProject" class="menu-dropdown-item" role="menuitem">
-                                    <i class="fas fa-save"></i>保存项目
+                                    <i class="fas fa-save"></i>临时保存
                                 </button>
                             </li>
                             <li role="none">
                                 <button id="loadProject" class="menu-dropdown-item" role="menuitem">
-                                    <i class="fas fa-folder-open"></i>加载项目
+                                    <i class="fas fa-folder-open"></i>加载临时
                                 </button>
                             </li>
                             <li role="none">
@@ -132,16 +155,6 @@
                             <i class="fas fa-caret-down text-xs"></i>
                         </button>
                         <ul id="editMenu" class="menu-dropdown absolute right-0 mt-2 list-none p-0 m-0" role="menu" aria-labelledby="editMenuBtn">
-                            <li role="none">
-                                <button id="addCharacter" class="menu-dropdown-item" role="menuitem">
-                                    <i class="fas fa-plus"></i>添加角色
-                                </button>
-                            </li>
-                            <li role="none">
-                                <button id="deleteCharacter" class="menu-dropdown-item" role="menuitem">
-                                    <i class="fas fa-trash"></i>删除角色
-                                </button>
-                            </li>
                             <li role="none">
                                 <hr class="my-1 border-gray-200">
                             </li>
@@ -216,7 +229,7 @@
                 <div class="flex gap-3">
                     <button id="add-character-btn" class="btn-primary py-2 px-4 rounded-lg hover:shadow-md transition-all">
                         <i class="fas fa-plus"></i>
-                        <span class="hidden sm-inline">添加</span>
+                        <span>添加</span>
                     </button>
 
                 </div>
@@ -257,7 +270,7 @@
                 <div class="flex gap-3">
                     <button id="refreshTableBtn" class="btn-primary py-2 px-4 rounded-lg hover:shadow-md transition-all">
                         <i class="fas fa-refresh"></i>
-                        <span class="hidden sm-inline">刷新</span>
+                        <span>刷新</span>
                     </button>
                 </div>
             </div>
@@ -315,7 +328,7 @@
                         </h3>
                         <button id="add-rule-btn" class="btn-primary py-1 px-3 rounded-lg hover:shadow-md transition-all duration-200">
                             <i class="fas fa-plus mr-1"></i>
-                            <span class="hidden sm:inline">添加规则</span>
+                            <span>添加规则</span>
                         </button>
                     </div>
                     <p class="text-xs text-gray-500 mt-0.5">设置角色间的关联规则，影响费用计算和回费效果</p>

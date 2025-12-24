@@ -170,54 +170,6 @@
   margin-bottom: 1.5rem;
 }
 
-/* 响应式布局 */
-@media (max-width: var(--breakpoint-md)) {
-  .navbar {
-    padding: 0.5rem;
-  }
-  
-  .navbar-nav {
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  
-  .sidebar {
-    position: fixed;
-    left: 0;
-    top: 60px;
-    bottom: 0;
-    width: 250px;
-    z-index: 40;
-    box-shadow: var(--shadow-lg);
-  }
-  
-  .content {
-    padding: 1rem;
-  }
-  
-  .card-container {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: var(--breakpoint-sm)) {
-  .navbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
-  }
-  
-  .navbar-brand {
-    margin-right: 0;
-    text-align: center;
-  }
-  
-  .navbar-nav,
-  .navbar-actions {
-    justify-content: center;
-  }
-}
-
 /* 页脚 */
 .footer {
   background-color: var(--navbar-bg);
@@ -245,16 +197,4 @@
 
 .tool-panel.collapsed {
   transform: translateX(100%);
-}
-
-@media (max-width: var(--breakpoint-lg)) {
-  .tool-panel {
-    position: fixed;
-    right: 0;
-    top: 60px;
-    bottom: 0;
-    width: 300px;
-    z-index: 40;
-    box-shadow: var(--shadow-lg);
-  }
 }

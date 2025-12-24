@@ -298,284 +298,30 @@ body {
   }
 }
 
-/* ========== Responsive design ========== */
-
-/* Large screens */
-@media (min-width: 1200px) {
-    .main-content {
-        max-width: 1400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .panel {
-        padding: var(--spacing-8);
-    }
-
-    .left-panel {
-        width: 25%;
-        min-width: 320px;
-    }
-
-    .middle-panel {
-        width: 55%;
-        min-width: 500px;
-    }
-
-    .right-panel {
-        width: 20%;
-        min-width: 280px;
-    }
+/* ========== Desktop design ========== */
+.main-content {
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/* Medium screens */
-@media (min-width: 1024px) and (max-width: 1199px) {
-    .main-content {
-        max-width: 1024px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .left-panel {
-        width: 30%;
-        min-width: 280px;
-    }
-
-    .middle-panel {
-        width: 45%;
-        min-width: 360px;
-    }
-
-    .right-panel {
-        width: 25%;
-        min-width: 240px;
-    }
+.panel {
+    padding: var(--spacing-8);
 }
 
-/* Tablet screens */
-@media (max-width: 1023px) {
-    .main-content {
-        flex-direction: column;
-        gap: var(--spacing-6);
-    }
-
-    .panel {
-        width: 100% !important;
-        min-width: auto !important;
-    }
-
-    .app-header {
-        padding-left: var(--spacing-4);
-        padding-right: var(--spacing-4);
-    }
-
-    .app-header .nav-menu ul {
-        flex-direction: column;
-        gap: var(--spacing-3);
-    }
-
-    /* 在平板设备上移除分隔线 */
-    .app-header .nav-menu ul li:not(:last-child)::after {
-        display: none;
-    }
-
-    .menu-dropdown {
-        position: absolute;
-        box-shadow: var(--shadow-xl);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.95);
-    }
-
-    /* Stack buttons vertically on tablets */
-    .button-group {
-        flex-direction: column;
-        gap: var(--spacing-3);
-    }
-
-    /* Adjust table padding for tablets */
-    table th, table td {
-        padding: var(--spacing-2) var(--spacing-3);
-    }
+.left-panel {
+    width: 25%;
+    min-width: 320px;
 }
 
-/* Mobile screens */
-@media (max-width: 767px) {
-    .main-content {
-        padding: var(--spacing-2);
-        gap: var(--spacing-4);
-    }
-
-    .panel {
-        padding: var(--spacing-4);
-        border-radius: var(--radius-lg);
-    }
-
-    .app-header {
-        padding-left: var(--spacing-3);
-        padding-right: var(--spacing-3);
-        min-height: auto;
-        flex-direction: column;
-        gap: var(--spacing-3);
-        padding-top: var(--spacing-3);
-        padding-bottom: var(--spacing-3);
-    }
-
-    .app-header .container {
-        flex-direction: column;
-        gap: var(--spacing-3);
-    }
-
-    .app-header .nav-menu ul {
-        flex-direction: column;
-        width: 100%;
-        gap: var(--spacing-2);
-    }
-
-    /* 在移动设备上移除分隔线 */
-    .app-header .nav-menu ul li:not(:last-child)::after {
-        display: none;
-    }
-
-    .app-header .logo {
-        gap: 0.75rem;
-    }
-
-    .app-header .logo i {
-        font-size: 1.5rem;
-    }
-
-    .app-header .logo h1 {
-        font-size: 1.25rem;
-    }
-
-    .menu-button {
-        padding: 0.625rem 1rem;
-        font-size: 0.9rem;
-        width: 100%;
-        border-radius: var(--radius-lg);
-    }
-
-    .menu-button span {
-        display: block;
-    }
-
-    .menu-dropdown {
-        position: static;
-        width: 100%;
-        min-width: auto;
-        margin-top: 0.5rem;
-    }
-
-    /* Stack form elements vertically */
-    .form-group {
-        flex-direction: column;
-        gap: var(--spacing-2);
-    }
-
-    /* Adjust font sizes for mobile */
-    h1 {
-        font-size: var(--font-2xl);
-    }
-
-    h2 {
-        font-size: var(--font-xl);
-    }
-
-    h3 {
-        font-size: var(--font-lg);
-    }
-
-    /* Adjust button sizes for mobile */
-    button {
-        padding: var(--spacing-2) var(--spacing-4);
-        font-size: var(--font-sm);
-    }
-
-    button.large {
-        padding: var(--spacing-3) var(--spacing-6);
-        font-size: var(--font-base);
-    }
-
-    /* Adjust input sizes for mobile */
-    input, select, textarea {
-        padding: var(--spacing-2) var(--spacing-3);
-        font-size: var(--font-sm);
-    }
-
-    /* Make tables scrollable on mobile */
-    .table-container {
-        overflow-x: auto;
-    }
-
-    table {
-        min-width: 600px;
-    }
-
-    /* Adjust toast position for mobile */
-    #toast {
-        left: var(--spacing-2);
-        right: var(--spacing-2);
-        bottom: var(--spacing-2);
-        width: auto;
-    }
+.middle-panel {
+    width: 55%;
+    min-width: 500px;
 }
 
-/* Small mobile screens */
-@media (max-width: 479px) {
-    .main-content {
-        padding: var(--spacing-1);
-        gap: var(--spacing-3);
-    }
-
-    .panel {
-        padding: var(--spacing-3);
-        border-radius: var(--radius-md);
-    }
-
-    .app-header {
-        padding-left: var(--spacing-2);
-        padding-right: var(--spacing-2);
-    }
-
-    /* Stack navigation items */
-    .app-header .nav-menu ul li {
-        width: 100%;
-    }
-
-    /* Adjust menu button size */
-    .menu-button {
-        padding: var(--spacing-3) var(--spacing-4);
-        font-size: 0.875rem;
-    }
-
-    .app-header .logo i {
-        font-size: 1.25rem;
-    }
-
-    .app-header .logo h1 {
-        font-size: 1.125rem;
-    }
-
-    /* Hide less important elements on small screens */
-    .hide-on-mobile {
-        display: none;
-    }
-
-    /* Simplify button groups */
-    .button-group {
-        gap: var(--spacing-2);
-    }
-}
-
-/* High DPI screens */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    .card, .panel {
-        box-shadow: var(--shadow-md);
-    }
-
-    .card:hover, .panel:hover {
-        box-shadow: var(--shadow-xl);
-    }
+.right-panel {
+    width: 20%;
+    min-width: 280px;
 }
 
 /* ========== Layout styles ========== */
@@ -585,17 +331,11 @@ body {
     margin-bottom: var(--spacing-6);
     transition: padding 0.3s ease;
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-4);
+    flex-direction: row;
+    gap: var(--spacing-6);
 }
 
-/* ========== Main content area ========== */
-@media (min-width: 1024px) {
-    .main-content {
-        flex-direction: row;
-        gap: var(--spacing-6);
-    }
-}
+
 
 /* ========== Panel styles ========== */
 section {
@@ -621,21 +361,19 @@ section:hover {
 }
 
 /* Panel width adjustments */
-@media (min-width: 1024px) {
-    .left-panel {
-        width: 28%;
-        min-width: 300px;
-    }
+.left-panel {
+    width: 28%;
+    min-width: 300px;
+}
 
-    .middle-panel {
-        width: 50%;
-        min-width: 400px;
-    }
+.middle-panel {
+    width: 50%;
+    min-width: 400px;
+}
 
-    .right-panel {
-        width: 22%;
-        min-width: 250px;
-    }
+.right-panel {
+    width: 22%;
+    min-width: 250px;
 }
 
 /* ========== Panel header styles ========== */
@@ -1079,6 +817,311 @@ pre code {
   border: none;
 }
 
+/* 角色预设弹窗玻璃态效果 */
+#characterPresetsModal .modal-content {
+    /* 玻璃态核心样式 - 优化后 */
+    background: rgba(249, 250, 251, 0.7) !important; /* 使用淡灰色背景，与主界面色调一致 */
+    backdrop-filter: blur(16px) isolate; /* 增强模糊效果 */
+    /* 质感装饰 */
+    border: 1px solid rgba(255, 255, 255, 0.3) !important; /* 更明显的半透边框 */
+    border-radius: 16px !important; /* 更柔和的圆角 */
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.05), /* 底层柔和阴影 */
+        0 12px 32px rgba(0, 0, 0, 0.08), /* 中层阴影增强悬浮感 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.5) /* 内层高光增强玻璃质感 */
+        !important;
+    /* 弹窗尺寸 */
+    max-width: 500px;
+    /* 渐变背景增强玻璃质感 */
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 249, 255, 0.6) 100%) !important;
+}
+
+#characterPresetsModal .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4); /* 更明显的边框 */
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#characterPresetsModal .modal-header h4 {
+    color: #1f2937; /* 更深的文字颜色 */
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+#characterPresetsModal #presetsList {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+#characterPresetsModal #presetsList .flex {
+    /* 列表项玻璃态效果 - 优化后 */
+    background: rgba(255, 255, 255, 0.5) !important; /* 降低透明度增强通透感 */
+    backdrop-filter: blur(12px) isolate; /* 增强模糊效果 */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* 半透明边框 */
+    border-radius: 12px; /* 更柔和的圆角 */
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 更自然的过渡曲线 */
+    position: relative;
+    overflow: hidden;
+}
+
+#characterPresetsModal #presetsList .flex::before {
+    /* 添加微妙的渐变高光 */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+    pointer-events: none;
+}
+
+#characterPresetsModal #presetsList .flex:hover::before {
+    left: 100%;
+}
+
+#characterPresetsModal #presetsList .flex:hover {
+    background: rgba(255, 255, 255, 0.7) !important; /* 悬停时略微增加透明度 */
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.08), /* 增强阴影 */
+        0 4px 12px rgba(59, 130, 246, 0.1), /* 添加主色调阴影 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) /* 增强内层高光 */;
+    transform: translateY(-2px); /* 更明显的上浮效果 */
+    border-color: rgba(59, 130, 246, 0.3); /* 边框变色增强交互感 */
+}
+
+#characterPresetsModal #presetsList h5 {
+    color: #1f2937;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+#characterPresetsModal #presetsList .text-gray-500 {
+    color: #4b5563 !important; /* 更深的文字颜色 */
+    font-size: 0.875rem;
+}
+
+#characterPresetsModal .btn {
+    /* 按钮玻璃态效果 - 优化后 */
+    background: rgba(59, 130, 246, 0.15) !important; /* 更透的背景 */
+    color: #3b82f6 !important; /* 主色调文字 */
+    border: 1px solid rgba(59, 130, 246, 0.3) !important; /* 半透边框 */
+    border-radius: 8px !important; /* 更柔和的圆角 */
+    padding: 0.5rem 1.25rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    backdrop-filter: blur(8px) isolate;
+    position: relative;
+    overflow: hidden;
+}
+
+#characterPresetsModal .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    pointer-events: none;
+}
+
+#characterPresetsModal .btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+#characterPresetsModal .btn:hover {
+    background: rgba(59, 130, 246, 0.25) !important; /* 悬停时增加透明度 */
+    box-shadow: 
+        0 4px 12px rgba(59, 130, 246, 0.2), /* 增强阴影 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.5) /* 增强内层高光 */
+        !important;
+    transform: translateY(-1px) !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    z-index: 1;
+}
+
+#characterPresetsModal .btn i {
+    position: relative;
+    z-index: 2;
+}
+
+#characterPresetsModal .btn span {
+    position: relative;
+    z-index: 2;
+}
+
+#characterPresetsModal .btn-outline {
+    background: rgba(107, 114, 128, 0.1) !important;
+    color: #6b7280 !important;
+    border-color: rgba(107, 114, 128, 0.3) !important;
+}
+
+#characterPresetsModal .btn-outline:hover {
+    background: rgba(107, 114, 128, 0.2) !important;
+    box-shadow: 
+        0 4px 12px rgba(107, 114, 128, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5)
+        !important;
+    border-color: rgba(107, 114, 128, 0.5) !important;
+}
+
+#characterPresetsModal .btn:disabled {
+    background: rgba(156, 163, 175, 0.1) !important;
+    color: #9ca3af !important;
+    border-color: rgba(156, 163, 175, 0.3) !important;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* 滚动条样式优化 */
+#characterPresetsModal #presetsList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#characterPresetsModal #presetsList::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+#characterPresetsModal #presetsList::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+
+#characterPresetsModal #presetsList::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
+}
+
+/* 通用玻璃态模态框样式 */
+.modal-backdrop .modal-content {
+    /* 玻璃态核心样式 */
+    background: rgba(249, 250, 251, 0.75) !important;
+    backdrop-filter: blur(16px) isolate;
+    /* 质感装饰 */
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 12px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5)
+        !important;
+    /* 渐变背景增强玻璃质感 */
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 249, 255, 0.6) 100%) !important;
+    /* 动画效果 */
+    animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.modal-backdrop .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+    padding-bottom: 1rem !important;
+    margin-bottom: 1.5rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.modal-backdrop .modal-header h3,
+.modal-backdrop .modal-header h4 {
+    color: #1f2937 !important;
+    font-weight: 700 !important;
+    font-size: 1.25rem !important;
+}
+
+.modal-backdrop .modal-body {
+    color: #4b5563 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.modal-backdrop .modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.4) !important;
+    padding-top: 1rem !important;
+    margin-top: 1.5rem !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+}
+
+/* 特定模态框样式微调 */
+
+/* 1. 角色相关模态框 */
+#addCharacterModal .modal-content,
+#editCharacterModal .modal-content {
+    max-width: 450px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(239, 246, 255, 0.6) 100%) !important;
+}
+
+/* 2. 规则相关模态框 */
+#addRuleModal .modal-content {
+    max-width: 550px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(245, 243, 255, 0.6) 100%) !important;
+}
+
+/* 3. 数据项编辑模态框 */
+#editDataItemModal .modal-content {
+    max-width: 600px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 253, 244, 0.6) 100%) !important;
+}
+
+/* 4. 时间轴模态框 */
+#timelineModal .modal-content {
+    max-width: 90% !important;
+    max-height: 90vh !important;
+    width: 1000px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(253, 240, 249, 0.6) 100%) !important;
+}
+
+/* 5. 使用手册模态框 */
+#manualModal .modal-content {
+    max-width: 90% !important;
+    max-height: 90vh !important;
+    width: 1200px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 251, 235, 0.7) 100%) !important;
+}
+
+/* 6. 关于模态框 */
+#aboutModal .modal-content {
+    max-width: 450px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 248, 225, 0.6) 100%) !important;
+}
+
+/* 7. 初始化设置模态框 */
+#initializeModal .modal-content {
+    max-width: 500px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(237, 242, 255, 0.6) 100%) !important;
+}
+
+/* 8. 确认对话框模态框 */
+#confirmModal .modal-content {
+    max-width: 400px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(254, 243, 235, 0.6) 100%) !important;
+}
+
+/* 9. 特殊技能设置模态框 */
+#specialSkillsModal .modal-content {
+    max-width: 500px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(243, 244, 266, 0.6) 100%) !important;
+}
+
+/* 10. 技能绑定/持续回费设置模态框 */
+#skillBindingModal .modal-content {
+    max-width: 450px !important;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 253, 255, 0.6) 100%) !important;
+}
+
 /* 滚动条样式 */
 ::-webkit-scrollbar {
   width: 8px;
@@ -1279,15 +1322,9 @@ pre code {
 }
 
 /* 响应式调整 */
-@media (max-width: 767px) {
-  #specialSkillsContainer {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-2);
-  }
-  
-  .skill-card {
-    padding: var(--spacing-3);
-  }
+#specialSkillsContainer {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-3);
 }
 
 /* 模态框内容调整 */
@@ -1694,17 +1731,3 @@ pre code {
 
 
 
-/* 响应式调整 */
-@media (max-width: 767px) {
-  #specialSkillsModal .modal-header {
-    padding: var(--spacing-4);
-  }
-  
-  #specialSkillsModal .modal-header h3 {
-    font-size: var(--font-lg);
-  }
-  
-  #specialSkillsModal .modal-header i {
-    font-size: var(--font-xl);
-  }
-}

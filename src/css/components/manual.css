@@ -225,11 +225,7 @@
     margin-bottom: 0.5rem;
 }
 
-@media (min-width: 768px) {
-    .manual-cover h1 {
-        font-size: 3rem;
-    }
-}
+
 
 .manual-cover p {
     color: var(--manual-text-secondary);
@@ -535,90 +531,7 @@
 }
 
 /* 响应式设计 */
-@media (max-width: 1024px) {
-    .manual-container {
-        padding: 0 1.25rem;
-    }
-    
-    .manual-cover .flex {
-        flex-direction: column;
-        text-align: center;
-    }
-}
 
-@media (max-width: 768px) {
-    .manual-container {
-        padding: 0 1rem;
-    }
-    
-    .manual-cover {
-        text-align: center;
-        padding: 2rem 1.5rem;
-    }
-    
-    .manual-cover h1 {
-        font-size: 2rem;
-    }
-    
-    .section-header h2 {
-        font-size: 1.5rem;
-    }
-    
-    .feature-card {
-        padding: 1.25rem;
-    }
-    
-    .feature-icon {
-        width: 3rem;
-        height: 3rem;
-        font-size: 1.5rem;
-    }
-    
-    .manual-nav-item {
-        font-size: 0.875rem;
-        padding: 0.625rem 0.875rem;
-    }
-}
-
-@media (max-width: 640px) {
-    .manual-container {
-        padding: 0 0.75rem;
-    }
-    
-    .manual-cover {
-        padding: 1.5rem 1rem;
-    }
-    
-    .manual-cover h1 {
-        font-size: 1.75rem;
-    }
-    
-    .section-header h2 {
-        font-size: 1.375rem;
-    }
-    
-    .feature-card {
-        padding: 1rem;
-    }
-    
-    .feature-icon {
-        width: 2.5rem;
-        height: 2.5rem;
-        font-size: 1.25rem;
-    }
-    
-    .manual-nav-item {
-        font-size: 0.8125rem;
-        padding: 0.5rem 0.75rem;
-    }
-    
-    .formula-item,
-    .example-box,
-    .note-item,
-    .time-format-item {
-        padding: 1.25rem;
-    }
-}
 
 /* 滚动条样式 */
 .manual-container::-webkit-scrollbar {

@@ -123,10 +123,7 @@
   --transition-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
   
   /* 断点 */
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
+
   
   /* 亮色主题 - 现代化调整 */
   --text-primary: #111827;

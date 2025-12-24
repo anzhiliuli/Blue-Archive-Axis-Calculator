@@ -86,7 +86,7 @@ class App {
         // 角色表格配置
         this.tables.characters = new DataTable('charactersTable', [
             { field: 'name', title: '角色名', sortable: true },
-            { field: 'costRecoveryRate', title: '回复速度', sortable: true },
+            { field: 'costRecoveryRate', title: '回费速度', sortable: true },
             { field: 'skillCost', title: '技能费用', sortable: true },
             { field: 'costIncrease', title: '回费增加', sortable: true },
             { field: 'isChargePercentage', title: '启用回费', sortable: true, render: (item) => {

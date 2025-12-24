@@ -9,21 +9,10 @@ class UIRenderer {
 
     // 初始化事件监听器
     initEventListeners() {
-        // 监听窗口大小变化，重新调整UI
-        window.addEventListener('resize', () => this.adjustUIForScreenSize());
+
     }
 
-    // 调整UI以适应屏幕大小
-    adjustUIForScreenSize() {
-        const container = document.getElementById('main-container');
-        if (container) {
-            if (window.innerWidth < 768) {
-                container.classList.add('mobile-layout');
-            } else {
-                container.classList.remove('mobile-layout');
-            }
-        }
-    }
+
 
     // 渲染角色列表
     renderCharacterList() {
@@ -728,7 +717,7 @@ class UIRenderer {
                 ]
             },
             options: {
-                responsive: true,
+                responsive: false,
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {

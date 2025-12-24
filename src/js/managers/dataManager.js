@@ -14,8 +14,26 @@ class DataManager {
         this.currentPage = 1;    // 当前页码
         this.pageSize = 10;      // 每页显示行数
         
-        // 预设角色数据 - 后续更新
-        this.presetCharacters = [];
+        // 预设角色数据
+        this.presetCharacters = [
+            { name: '水白', costRecoveryRate: 0.07, skillCost: 3, costIncrease: 20.2, isChargePercentage: true },
+            { name: '礼奈', costRecoveryRate: 0.07, skillCost: 6, costIncrease: 0, isChargePercentage: false },
+            { name: '瞬', costRecoveryRate: 0.07, skillCost: 3, costIncrease: 0, isChargePercentage: false },
+            { name: '妃咲', costRecoveryRate: 0.07, skillCost: 3, costIncrease: 20.2, isChargePercentage: true },
+            { name: '未花', costRecoveryRate: 0.07, skillCost: 6, costIncrease: 0, isChargePercentage: false },
+            { name: '若藻', costRecoveryRate: 0.07, skillCost: 4, costIncrease: 0, isChargePercentage: false },
+            { name: '水星', costRecoveryRate: 0.07, skillCost: 5, costIncrease: 0, isChargePercentage: false },
+            { name: '锅', costRecoveryRate: 0.07, skillCost: 2, costIncrease: 0, isChargePercentage: false },
+            { name: '礼露', costRecoveryRate: 0.07, skillCost: 3, costIncrease: 0, isChargePercentage: false },
+            { name: '圣娅', costRecoveryRate: 0.07, skillCost: 3, costIncrease: 0, isChargePercentage: false },
+            { name: '圣娅（泳装）', costRecoveryRate: 0.07, skillCost: 3, costIncrease: 0, isChargePercentage: false },
+            { name: '水花', costRecoveryRate: 0.07, skillCost: 2, costIncrease: 0, isChargePercentage: false }
+        ];
+        
+        // 撤销/重做相关状态
+        this.undoStack = [];     // 撤销栈
+        this.redoStack = [];     // 重做栈
+        this.maxHistorySize = 50; // 最大历史记录数量
     }
 
     // 获取唯一ID
@@ -25,6 +43,7 @@ class DataManager {
 
     // 添加角色
     addCharacter(characterData) {
+        this.saveState();
         // 检查角色名称是否重复
         const nameExists = this.characters.some(character => 
             character.name.toLowerCase() === characterData.name.toLowerCase()
@@ -48,6 +67,7 @@ class DataManager {
 
     // 更新角色
     updateCharacter(id, characterData) {
+        this.saveState();
         const index = this.characters.findIndex(character => character.id === id);
         if (index !== -1) {
             // 检查角色名称是否重复（排除当前角色）
@@ -77,6 +97,7 @@ class DataManager {
 
     // 删除角色
     deleteCharacter(id) {
+        this.saveState();
         const index = this.characters.findIndex(character => character.id === id);
         if (index !== -1) {
             // 移除相关规则
@@ -102,6 +123,7 @@ class DataManager {
 
     // 添加关联规则
     addRule(ruleData) {
+        this.saveState();
         // 创建基础规则对象，某些规则类型可能不需要characterId
         const baseRule = {
             id: this.getNextId(),
@@ -154,6 +176,7 @@ class DataManager {
 
     // 更新关联规则
     updateRule(id, ruleData) {
+        this.saveState();
         const index = this.rules.findIndex(rule => rule.id === id);
         if (index !== -1) {
             let updatedRule = {
@@ -201,6 +224,7 @@ class DataManager {
 
     // 删除关联规则
     deleteRule(id) {
+        this.saveState();
         const index = this.rules.findIndex(rule => rule.id === id);
         if (index !== -1) {
             return this.rules.splice(index, 1)[0];
@@ -225,6 +249,7 @@ class DataManager {
 
     // 添加数据项
     addDataItem(itemData) {
+        this.saveState();
         const lastItem = this.dataItems[this.dataItems.length - 1];
         const defaultTime = lastItem ? this.getTimeFromItem(lastItem) + 1 : 0;
         
@@ -246,6 +271,7 @@ class DataManager {
 
     // 更新数据项
     updateDataItem(id, itemData) {
+        this.saveState();
         const index = this.dataItems.findIndex(item => item.id === id);
         if (index !== -1) {
             this.dataItems[index] = {
@@ -260,6 +286,7 @@ class DataManager {
 
     // 删除数据项
     deleteDataItem(id) {
+        this.saveState();
         const index = this.dataItems.findIndex(item => item.id === id);
         if (index !== -1) {
             // 获取要删除的数据项
@@ -280,6 +307,7 @@ class DataManager {
 
     // 批量删除数据项
     deleteDataItems(ids) {
+        this.saveState();
         // 获取要删除的数据项
         const deletedItems = this.dataItems.filter(item => ids.includes(item.id));
         // 删除关联的规则
@@ -381,11 +409,17 @@ class DataManager {
 
     // 清空所有数据
     clearAllData() {
+        this.saveState();
         this.characters = [];
         this.rules = [];
         this.dataItems = [];
         this.currentCost = 0;
         this.nextId = 1;
+        this.hideSpecialRows = false;
+        this.continuousChargeData = null;
+        this.initializationDuration = 0;
+        this.currentPage = 1;
+        this.pageSize = 10;
     }
 
     // 保存数据到本地存储
@@ -399,6 +433,10 @@ class DataManager {
                 totalCost: this.totalCost,
                 nextId: this.nextId,
                 initializationDuration: this.initializationDuration,
+                hideSpecialRows: this.hideSpecialRows,
+                continuousChargeData: this.continuousChargeData,
+                currentPage: this.currentPage,
+                pageSize: this.pageSize,
                 savedAt: new Date().toISOString()
             };
             localStorage.setItem('blueArchiveCalculatorData', JSON.stringify(data));
@@ -414,6 +452,7 @@ class DataManager {
         try {
             const data = localStorage.getItem('blueArchiveCalculatorData');
             if (data) {
+                this.saveState();
                 const parsedData = JSON.parse(data);
                 this.characters = parsedData.characters || [];
                 this.rules = parsedData.rules || [];
@@ -422,6 +461,10 @@ class DataManager {
                 this.totalCost = parsedData.totalCost || 10;
                 this.nextId = parsedData.nextId || 1;
                 this.initializationDuration = parsedData.initializationDuration || 0;
+                this.hideSpecialRows = parsedData.hideSpecialRows || false;
+                this.continuousChargeData = parsedData.continuousChargeData || null;
+                this.currentPage = parsedData.currentPage || 1;
+                this.pageSize = parsedData.pageSize || 10;
                 return true;
             }
             return false;
@@ -449,6 +492,7 @@ class DataManager {
     // 导入数据
     importData(data) {
         try {
+            this.saveState();
             if (data.characters) this.characters = data.characters;
             if (data.rules) this.rules = data.rules;
             if (data.dataItems) this.dataItems = data.dataItems;
@@ -456,6 +500,10 @@ class DataManager {
             if (data.totalCost) this.totalCost = data.totalCost;
             if (data.nextId) this.nextId = data.nextId;
             if (data.initializationDuration !== undefined) this.initializationDuration = data.initializationDuration;
+            if (data.hideSpecialRows !== undefined) this.hideSpecialRows = data.hideSpecialRows;
+            if (data.continuousChargeData !== undefined) this.continuousChargeData = data.continuousChargeData;
+            if (data.currentPage !== undefined) this.currentPage = data.currentPage;
+            if (data.pageSize !== undefined) this.pageSize = data.pageSize;
             return true;
         } catch (error) {
             console.error('导入数据失败:', error);
@@ -475,6 +523,7 @@ class DataManager {
     
     // 清空所有角色
     clearAllCharacters() {
+        this.saveState();
         this.characters = [];
         this.rules = [];
         this.nextId = 1;
@@ -482,18 +531,168 @@ class DataManager {
 
     // 清空数据项列表
     clearDataItems() {
+        this.saveState();
         this.dataItems = [];
         this.currentCost = 0;
     }
 
     // 设置初始化时间（可选功能）
     setInitializationTime(duration) {
+        this.saveState();
         this.initializationDuration = duration;
     }
 
     // 获取初始化时间
     getInitializationTime() {
         return this.initializationDuration || 0;
+    }
+    
+    // 设置持续回费数据
+    setContinuousChargeData(data) {
+        this.saveState();
+        this.continuousChargeData = data;
+    }
+    
+    // 设置当前费用
+    setCurrentCost(cost) {
+        this.currentCost = cost;
+    }
+    
+    // 添加数据项到末尾
+    pushDataItem(item) {
+        this.dataItems.push(item);
+    }
+    
+    // 保存当前状态到撤销栈
+    saveState() {
+        // 创建当前状态的深拷贝，包含所有数据属性
+        const state = {
+            characters: JSON.parse(JSON.stringify(this.characters)),
+            rules: JSON.parse(JSON.stringify(this.rules)),
+            dataItems: JSON.parse(JSON.stringify(this.dataItems)),
+            currentCost: this.currentCost,
+            totalCost: this.totalCost,
+            nextId: this.nextId,
+            hideSpecialRows: this.hideSpecialRows,
+            continuousChargeData: JSON.parse(JSON.stringify(this.continuousChargeData)),
+            initializationDuration: this.initializationDuration,
+            currentPage: this.currentPage,
+            pageSize: this.pageSize
+        };
+        
+        // 将状态保存到撤销栈
+        this.undoStack.push(state);
+        
+        // 限制历史记录数量
+        if (this.undoStack.length > this.maxHistorySize) {
+            this.undoStack.shift();
+        }
+        
+        // 清空重做栈
+        this.redoStack = [];
+        
+        // 触发状态变化事件，用于更新UI
+        this.dispatchStateChangeEvent();
+    }
+    
+    // 撤销操作
+    undo() {
+        if (this.undoStack.length === 0) {
+            return false;
+        }
+        
+        // 将当前状态保存到重做栈
+        const currentState = {
+            characters: JSON.parse(JSON.stringify(this.characters)),
+            rules: JSON.parse(JSON.stringify(this.rules)),
+            dataItems: JSON.parse(JSON.stringify(this.dataItems)),
+            currentCost: this.currentCost,
+            totalCost: this.totalCost,
+            nextId: this.nextId,
+            hideSpecialRows: this.hideSpecialRows,
+            continuousChargeData: JSON.parse(JSON.stringify(this.continuousChargeData)),
+            initializationDuration: this.initializationDuration,
+            currentPage: this.currentPage,
+            pageSize: this.pageSize
+        };
+        this.redoStack.push(currentState);
+        
+        // 从撤销栈恢复上一个状态
+        const previousState = this.undoStack.pop();
+        this.restoreState(previousState);
+        
+        // 触发状态变化事件
+        this.dispatchStateChangeEvent();
+        
+        return true;
+    }
+    
+    // 重做操作
+    redo() {
+        if (this.redoStack.length === 0) {
+            return false;
+        }
+        
+        // 将当前状态保存到撤销栈
+        const currentState = {
+            characters: JSON.parse(JSON.stringify(this.characters)),
+            rules: JSON.parse(JSON.stringify(this.rules)),
+            dataItems: JSON.parse(JSON.stringify(this.dataItems)),
+            currentCost: this.currentCost,
+            totalCost: this.totalCost,
+            nextId: this.nextId,
+            hideSpecialRows: this.hideSpecialRows,
+            continuousChargeData: JSON.parse(JSON.stringify(this.continuousChargeData)),
+            initializationDuration: this.initializationDuration,
+            currentPage: this.currentPage,
+            pageSize: this.pageSize
+        };
+        this.undoStack.push(currentState);
+        
+        // 从重做栈恢复下一个状态
+        const nextState = this.redoStack.pop();
+        this.restoreState(nextState);
+        
+        // 触发状态变化事件
+        this.dispatchStateChangeEvent();
+        
+        return true;
+    }
+    
+    // 恢复指定状态
+    restoreState(state) {
+        this.characters = state.characters;
+        this.rules = state.rules;
+        this.dataItems = state.dataItems;
+        this.currentCost = state.currentCost;
+        this.totalCost = state.totalCost;
+        this.nextId = state.nextId;
+        this.hideSpecialRows = state.hideSpecialRows;
+        this.continuousChargeData = state.continuousChargeData;
+        this.initializationDuration = state.initializationDuration;
+        this.currentPage = state.currentPage;
+        this.pageSize = state.pageSize;
+    }
+    
+    // 检查是否可以撤销
+    canUndo() {
+        return this.undoStack.length > 0;
+    }
+    
+    // 检查是否可以重做
+    canRedo() {
+        return this.redoStack.length > 0;
+    }
+    
+    // 触发状态变化事件
+    dispatchStateChangeEvent() {
+        const event = new CustomEvent('stateChanged', {
+            detail: {
+                canUndo: this.canUndo(),
+                canRedo: this.canRedo()
+            }
+        });
+        document.dispatchEvent(event);
     }
 }
 

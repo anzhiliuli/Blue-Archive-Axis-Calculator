@@ -79,21 +79,7 @@ class Navbar {
             });
         });
 
-        // 新建项目按钮
-        const newProjectBtn = document.getElementById('newProject');
-        if (newProjectBtn) {
-            newProjectBtn.addEventListener('click', () => {
-                window.App.modalManager.showConfirmModal(
-                    '新建项目',
-                    '确定要新建一个新项目吗？当前未保存的数据将丢失。',
-                    () => {
-                        window.App.dataManager.newProject();
-                        window.App.uiRenderer.refreshAll();
-                        window.App.modalManager.showToast('项目已新建', 'success');
-                    }
-                );
-            });
-        }
+
     }
 
     /**

@@ -114,22 +114,3 @@
 .right-0 { right: 0; }
 .z-50 { z-index: 50; }
 
-/* 响应式工具类 */
-@media (min-width: var(--breakpoint-sm)) {
-  .sm-hidden { display: none; }
-  .sm-inline { display: inline; }
-  .sm-px-6 { padding-left: var(--spacing-6); padding-right: var(--spacing-6); }
-  .sm-gap-6 { gap: var(--spacing-6); }
-}
-
-@media (min-width: var(--breakpoint-md)) {
-  .md-grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-@media (min-width: var(--breakpoint-lg)) {
-  .lg-w-22p { width: 22%; }
-  .lg-w-28p { width: 28%; }
-  .lg-w-50p { width: 50%; }
-  .lg-flex-row { flex-direction: row; }
-  .lg-flex-col { flex-direction: column; }
-}
