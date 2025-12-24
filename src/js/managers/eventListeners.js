@@ -566,21 +566,17 @@ class EventListeners {
         
 
         
-        // 显示时间线按钮 - 添加调试信息
-        const timelineViewBtn = document.getElementById('timelineViewBtn');
-        console.log('时间轴视图按钮:', timelineViewBtn);
-        if (timelineViewBtn) {
-            console.log('绑定时间轴视图按钮点击事件');
-            timelineViewBtn.addEventListener('click', () => {
-                console.log('点击了时间轴视图按钮');
+        // 使用事件委托监听时间轴视图按钮点击事件 - 确保能捕获到点击
+        console.log('添加事件委托监听时间轴视图按钮');
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#timelineViewBtn')) {
+                console.log('通过事件委托捕获到时间轴视图按钮点击');
                 // 显示时间轴模态框
                 this.modalManager.showModal('timelineModal');
                 // 初始化时间轴视图
                 this.uiRenderer.initTimelineView();
-            });
-        } else {
-            console.error('找不到时间轴视图按钮');
-        }
+            }
+        });
         
         // 持续回费功能按钮
         const skillBindingBtn = document.getElementById('skillBindingBtn');
