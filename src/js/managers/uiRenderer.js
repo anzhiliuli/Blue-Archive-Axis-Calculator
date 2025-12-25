@@ -469,506 +469,6 @@ class UIRenderer {
         }
     }
 
-    // 更新费用图表（如果有）
-    updateCostChart() {
-        // 检查是否在时间轴视图中
-        const timelineModal = document.getElementById('timelineModal');
-        if (timelineModal && !timelineModal.classList.contains('hidden')) {
-            // 如果时间轴模态框显示，更新费用变化曲线
-            const items = this.dataManager.getDataItems();
-            this.initCostChart(items, window.costChartType || 'line');
-        }
-    }
-    
-    // 初始化时间轴视图
-    initTimelineView() {
-        // 获取数据项和角色
-        const items = this.dataManager.getDataItems();
-        const characters = this.dataManager.getCharacters();
-        
-        // 更新数据概览卡片
-        this.updateTimelineStats(items);
-        
-        // 渲染时间轴事件
-        this.renderTimelineEvents(items, characters);
-        
-        // 初始化费用变化曲线
-        this.initCostChart(items);
-        
-        // 添加交互功能
-        this.initTimelineInteractions(items, characters);
-    }
-    
-    // 更新数据概览卡片
-    updateTimelineStats(items) {
-        // 计算技能释放次数
-        const totalActions = items.filter(item => item.action !== '初始化').length;
-        
-        // 计算总触发费用
-        const totalCost = items
-            .filter(item => item.action !== '初始化')
-            .reduce((sum, item) => sum + item.cost, 0);
-        
-        // 更新DOM元素
-        const totalActionsEl = document.getElementById('timelineTotalActions');
-        const totalCostEl = document.getElementById('timelineTotalCost');
-        
-        if (totalActionsEl) {
-            totalActionsEl.textContent = totalActions;
-        }
-        
-        if (totalCostEl) {
-            totalCostEl.textContent = totalCost.toFixed(2) + 'c';
-        }
-    }
-    
-    // 渲染时间轴事件
-    renderTimelineEvents(items, characters, filteredCharacterId = null) {
-        const timelineEventsContainer = document.getElementById('timelineEvents');
-        if (!timelineEventsContainer) return;
-        
-        // 过滤数据项
-        const filteredItems = items.filter(item => {
-            // 跳过初始化行
-            if (item.action === '初始化') {
-                return false;
-            }
-            // 按角色筛选
-            if (filteredCharacterId && item.characterId !== filteredCharacterId) {
-                return false;
-            }
-            return true;
-        });
-        
-        if (filteredItems.length === 0) {
-            timelineEventsContainer.innerHTML = `
-                <div class="timeline-empty-state text-center py-12">
-                    <div class="bg-gray-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                        <i class="fas fa-clock text-4xl text-gray-400"></i>
-                    </div>
-                    <h5 class="text-lg font-semibold text-gray-800 mb-1">
-                        ${filteredCharacterId ? '该角色暂无技能释放数据' : '暂无技能释放数据'}
-                    </h5>
-                    <p class="text-gray-500">
-                        ${filteredCharacterId ? '请尝试选择其他角色或添加数据项' : '请先添加数据项以查看时间轴'}
-                    </p>
-                </div>
-            `;
-            return;
-        }
-        
-        let timelineHTML = '';
-        
-        // 添加时间轴线
-        timelineHTML += '<div class="timeline-line"></div>';
-        
-        filteredItems.forEach((item, index) => {
-            const character = characters.find(c => c.id === item.characterId)?.name || '未知角色';
-            
-            timelineHTML += `
-                <div class="timeline-item">
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-header">
-                            <h4 class="timeline-title">
-                                <i class="fas fa-bolt text-blue-600"></i>
-                                ${character} - ${item.action}
-                            </h4>
-                            <div class="flex items-center gap-2">
-                                <span class="timeline-cost-badge">
-                                    ${item.remainingCost.toFixed(2)}c
-                                </span>
-                                <span class="timeline-number">
-                                    第 ${index + 1} 次
-                                </span>
-                            </div>
-                        </div>
-                        <div class="timeline-meta">
-                            <span class="timeline-meta-item">
-                                <i class="fas fa-clock"></i>
-                                ${this.formatTime(item.time)}
-                            </span>
-                            <span class="timeline-meta-item">
-                                <i class="fas fa-money-bill-wave"></i>
-                                触发费用: ${item.cost.toFixed(2)}c
-                            </span>
-                            <span class="timeline-meta-item">
-                                <i class="fas fa-arrow-down"></i>
-                                费用扣除: ${item.costDeduction.toFixed(2)}c
-                            </span>
-                            <span class="timeline-meta-item">
-                                <i class="fas fa-clock"></i>
-                                间隔: ${item.timeInterval.toFixed(2)}s
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        timelineEventsContainer.innerHTML = `
-            <div class="timeline-events-container">
-                ${timelineHTML}
-            </div>
-        `;
-    }
-    
-    // 初始化费用变化曲线
-    initCostChart(items, chartType = 'line') {
-        const ctx = document.getElementById('costChart');
-        if (!ctx) return;
-        
-        // 显示加载动画
-        const chartLoading = document.getElementById('chartLoading');
-        if (chartLoading) {
-            chartLoading.classList.remove('hidden');
-        }
-        
-        // 销毁已存在的图表实例（添加安全检查）
-        if (window.costChart && typeof window.costChart.destroy === 'function') {
-            try {
-                window.costChart.destroy();
-            } catch (error) {
-                console.error('销毁图表实例时出错:', error);
-            }
-        }
-        
-        // 清除window.costChart引用
-        window.costChart = null;
-        
-        // 准备图表数据
-        const filteredItems = items.filter(item => item.action !== '初始化');
-        
-        // 如果没有数据，显示空状态
-        if (filteredItems.length === 0) {
-            // 隐藏加载动画
-            if (chartLoading) {
-                chartLoading.classList.add('hidden');
-            }
-            return;
-        }
-        
-        const labels = filteredItems.map(item => this.formatTime(item.time));
-        const remainingCostData = filteredItems.map(item => item.remainingCost);
-        const triggerCostData = filteredItems.map(item => item.cost);
-        const timeData = filteredItems.map(item => item.time);
-        
-        // 创建渐变
-        const remainingCostGradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
-        remainingCostGradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
-        remainingCostGradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
-        
-        const triggerCostGradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
-        triggerCostGradient.addColorStop(0, 'rgba(239, 68, 68, 0.4)');
-        triggerCostGradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
-        
-        // 获取最新的角色数据
-        const characters = this.dataManager.getCharacters();
-        
-        // 确保Chart.js已加载
-        if (!window.Chart) {
-            console.error('Chart.js库未加载');
-            // 隐藏加载动画
-            if (chartLoading) {
-                chartLoading.classList.add('hidden');
-            }
-            return;
-        }
-        
-        // 创建新的Chart.js图表，适配不同的导出方式
-        let ChartConstructor;
-        if (typeof window.Chart === 'function') {
-            ChartConstructor = window.Chart;
-        } else if (window.Chart && typeof window.Chart.default === 'function') {
-            ChartConstructor = window.Chart.default;
-        } else {
-            console.error('无法获取Chart构造函数');
-            // 隐藏加载动画
-            if (chartLoading) {
-                chartLoading.classList.add('hidden');
-            }
-            return;
-        }
-        
-        window.costChart = new ChartConstructor(ctx, {
-            type: chartType,
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: '剩余费用 (c)',
-                        data: remainingCostData,
-                        borderColor: '#3b82f6',
-                        backgroundColor: chartType === 'line' ? remainingCostGradient : 'rgba(59, 130, 246, 0.8)',
-                        borderWidth: 3,
-                        fill: chartType === 'line',
-                        tension: 0.4,
-                        pointRadius: 5,
-                        pointHoverRadius: 8,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#3b82f6',
-                        pointBorderWidth: 2,
-                        pointHoverBackgroundColor: '#3b82f6',
-                        pointHoverBorderColor: '#ffffff',
-                        pointHoverBorderWidth: 2,
-                        animation: {
-                            duration: 1500,
-                            easing: 'easeInOutQuart'
-                        }
-                    },
-                    {
-                        label: '触发费用 (c)',
-                        data: triggerCostData,
-                        borderColor: '#ef4444',
-                        backgroundColor: chartType === 'line' ? triggerCostGradient : 'rgba(239, 68, 68, 0.8)',
-                        borderWidth: 3,
-                        fill: chartType === 'line',
-                        tension: 0.4,
-                        pointRadius: 5,
-                        pointHoverRadius: 8,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: '#ef4444',
-                        pointBorderWidth: 2,
-                        pointHoverBackgroundColor: '#ef4444',
-                        pointHoverBorderColor: '#ffffff',
-                        pointHoverBorderWidth: 2,
-                        animation: {
-                            duration: 1500,
-                            easing: 'easeInOutQuart',
-                            delay: 200
-                        }
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            usePointStyle: true,
-                            padding: 20,
-                            font: {
-                                size: 12,
-                                weight: '500'
-                            },
-                            color: '#374151'
-                        }
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#3b82f6',
-                        borderWidth: 1,
-                        padding: 10,
-                        cornerRadius: 6,
-                        boxPadding: 4,
-                        callbacks: {
-                            title: function(context) {
-                                return `时间: ${context[0].label}`;
-                            },
-                            label: function(context) {
-                                return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}c`;
-                            }
-                        }
-                    },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeInOutQuart'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 10,
-                        title: {
-                            display: true,
-                            text: '费用 (c)',
-                            font: {
-                                size: 12,
-                                weight: '600'
-                            },
-                            color: '#6b7280'
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#6b7280',
-                            font: {
-                                size: 11
-                            },
-                            stepSize: 2
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: '时间',
-                            font: {
-                                size: 12,
-                                weight: '600'
-                            },
-                            color: '#6b7280'
-                        },
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#6b7280',
-                            font: {
-                                size: 11
-                            },
-                            maxTicksLimit: 8
-                        }
-                    }
-                },
-                interaction: {
-                    mode: 'nearest',
-                    axis: 'x',
-                    intersect: false
-                },
-                animation: {
-                    duration: 2000,
-                    easing: 'easeInOutQuart'
-                }
-            }
-        });
-        
-        // 隐藏加载动画
-        setTimeout(() => {
-            if (chartLoading) {
-                chartLoading.classList.add('hidden');
-            }
-        }, 300);
-    }
-    
-    // 初始化时间轴交互功能
-    initTimelineInteractions(items, characters) {
-        // 角色筛选功能
-        const filterByCharacterBtn = document.getElementById('filterByCharacter');
-        const clearFilterBtn = document.getElementById('clearTimelineFilter');
-        const characterFilterDropdown = document.getElementById('characterFilterDropdown');
-        
-        if (filterByCharacterBtn && characterFilterDropdown) {
-            // 生成角色筛选选项
-            filterByCharacterBtn.addEventListener('click', (e) => {
-                // 获取最新的角色数据
-                const latestCharacters = this.dataManager.getCharacters();
-                
-                // 生成角色选项
-                let dropdownHTML = '';
-                
-                latestCharacters.forEach(character => {
-                    dropdownHTML += `
-                        <button class="character-filter-option px-4 py-2 w-full text-left hover:bg-blue-50 text-sm font-medium transition-colors duration-200 flex items-center gap-2">
-                            <i class="fas fa-user-circle text-blue-600"></i>
-                            ${character.name}
-                        </button>
-                    `;
-                });
-                
-                // 设置下拉菜单位置和内容
-                const rect = e.target.getBoundingClientRect();
-                characterFilterDropdown.innerHTML = dropdownHTML;
-                characterFilterDropdown.style.left = `${rect.left}px`;
-                characterFilterDropdown.style.top = `${rect.bottom + 5}px`;
-                characterFilterDropdown.style.width = `${rect.width}px`;
-                characterFilterDropdown.classList.toggle('hidden');
-                
-                // 添加选项点击事件
-                const filterOptions = characterFilterDropdown.querySelectorAll('.character-filter-option');
-                filterOptions.forEach(option => {
-                    option.addEventListener('click', () => {
-                        const characterName = option.textContent.trim();
-                        const latestCharacters = this.dataManager.getCharacters();
-                        const latestItems = this.dataManager.getDataItems();
-                        const character = latestCharacters.find(c => c.name === characterName);
-                        
-                        if (character) {
-                            // 渲染过滤后的时间轴
-                            this.renderTimelineEvents(latestItems, latestCharacters, character.id);
-                            
-                            // 更新按钮文本
-                            filterByCharacterBtn.innerHTML = `
-                                <i class="fas fa-filter"></i>
-                                <span>筛选: ${characterName}</span>
-                            `;
-                            
-                            // 显示清除筛选按钮
-                            if (clearFilterBtn) {
-                                clearFilterBtn.classList.remove('hidden');
-                            }
-                            
-                            // 隐藏下拉菜单
-                            characterFilterDropdown.classList.add('hidden');
-                        }
-                    });
-                });
-            });
-        }
-        
-        // 清除筛选
-        if (clearFilterBtn) {
-            clearFilterBtn.addEventListener('click', () => {
-                // 获取最新的数据
-                const latestItems = this.dataManager.getDataItems();
-                const latestCharacters = this.dataManager.getCharacters();
-                
-                // 渲染所有时间轴事件
-                this.renderTimelineEvents(latestItems, latestCharacters);
-                
-                // 恢复按钮文本
-                const filterBtn = document.getElementById('filterByCharacter');
-                if (filterBtn) {
-                    filterBtn.innerHTML = `
-                        <i class="fas fa-filter"></i>
-                        <span>按角色筛选</span>
-                    `;
-                }
-                
-                // 隐藏清除筛选按钮
-                clearFilterBtn.classList.add('hidden');
-            });
-        }
-        
-        // 点击外部关闭下拉菜单
-        document.addEventListener('click', (e) => {
-            if (characterFilterDropdown && 
-                !characterFilterDropdown.contains(e.target) && 
-                e.target !== document.getElementById('filterByCharacter')) {
-                characterFilterDropdown.classList.add('hidden');
-            }
-        });
-        
-        // 图表类型切换功能
-        const toggleChartTypeBtn = document.getElementById('toggleChartType');
-        if (toggleChartTypeBtn) {
-            let chartType = 'line';
-            
-            toggleChartTypeBtn.addEventListener('click', () => {
-                // 切换图表类型
-                chartType = chartType === 'line' ? 'bar' : 'line';
-                
-                // 更新按钮文本
-                toggleChartTypeBtn.innerHTML = `
-                    <i class="fas fa-swap-horizontal"></i>
-                    <span>切换到${chartType === 'line' ? '柱状图' : '折线图'}</span>
-                `;
-                
-                // 获取最新的数据
-                const latestItems = this.dataManager.getDataItems();
-                
-                // 重新初始化图表
-                this.initCostChart(latestItems, chartType);
-            });
-        }
-    }
 
     // 更新角色选择下拉框
     updateCharacterSelects() {
@@ -1323,13 +823,406 @@ class UIRenderer {
         this.renderRuleList();
         this.renderDataItemList();
         this.updateStatusInfo();
-        this.updateCostChart();
         this.updateCharacterSelects();
         
         // 如果时间轴模态框当前显示，更新时间轴视图
         const timelineModal = document.getElementById('timelineModal');
         if (timelineModal && !timelineModal.classList.contains('hidden')) {
             this.initTimelineView();
+        }
+    }
+    
+    /**
+     * 初始化时间轴视图
+     */
+    initTimelineView() {
+        // 获取数据项和角色
+        const items = this.dataManager.getDataItems();
+        const characters = this.dataManager.getCharacters();
+        
+        // 更新数据概览卡片
+        this.updateTimelineStats(items);
+        
+        // 渲染时间轴事件
+        this.renderTimelineEvents(items, characters);
+        
+        // 初始化费用变化曲线
+        this.initCostChart(items);
+        
+        // 添加交互功能
+        this.initTimelineInteractions(items, characters);
+    }
+    
+    /**
+     * 更新时间轴统计信息
+     * @param {Array} items - 数据项数组
+     */
+    updateTimelineStats(items) {
+        // 过滤有效数据项：排除初始化、undefined项和无效对象
+        const validItems = items.filter(item => {
+            if (!item || typeof item !== 'object') return false;
+            if (item.action === '初始化') return false;
+            return typeof item.cost === 'number';
+        });
+        
+        // 计算技能释放次数
+        const totalActions = validItems.length;
+        
+        // 计算总触发费用
+        const totalCost = validItems.reduce((sum, item) => sum + item.cost, 0);
+        
+        // 计算平均费用
+        const averageCost = totalActions > 0 ? totalCost / totalActions : 0;
+        
+        // 更新DOM元素
+        const totalActionsEl = document.getElementById('timelineTotalActions');
+        const totalCostEl = document.getElementById('timelineTotalCost');
+        const averageCostEl = document.getElementById('timelineAverageCost');
+        
+        if (totalActionsEl) {
+            totalActionsEl.textContent = totalActions;
+        }
+        
+        if (totalCostEl) {
+            totalCostEl.textContent = `${totalCost.toFixed(2)}c`;
+        }
+        
+        if (averageCostEl) {
+            averageCostEl.textContent = `${averageCost.toFixed(2)}c`;
+        }
+    }
+    
+    /**
+     * 渲染时间轴事件卡片
+     * @param {Array} items - 数据项数组
+     * @param {Array} characters - 角色数组
+     */
+    renderTimelineEvents(items, characters) {
+        const timelineEventsContainer = document.getElementById('timelineEvents');
+        if (!timelineEventsContainer) return;
+        
+        // 过滤数据项：排除初始化、undefined项和无效对象
+        const filteredItems = items.filter(item => {
+            // 确保item是有效的对象
+            if (!item || typeof item !== 'object') return false;
+            // 排除初始化项
+            if (item.action === '初始化') return false;
+            // 确保所有必要的属性都存在
+            return item.hasOwnProperty('time') && 
+                   item.hasOwnProperty('cost') && 
+                   item.hasOwnProperty('remainingCost') &&
+                   item.hasOwnProperty('action');
+        });
+        
+        // 按时间倒序排序（从大到小），与费用变化曲线保持一致
+        const sortedItems = [...filteredItems].sort((a, b) => b.time - a.time);
+        
+        if (sortedItems.length === 0) {
+            // 显示空状态
+            timelineEventsContainer.innerHTML = `
+                <div class="timeline-empty-state">
+                    <i class="fas fa-clock"></i>
+                    <h4 class="text-lg font-medium mb-2">暂无事件数据</h4>
+                    <p class="text-gray-500">
+                        请先添加数据项以查看时间轴
+                    </p>
+                </div>
+            `;
+            return;
+        }
+        
+        // 渲染时间轴卡片
+        const timelineCardsHTML = sortedItems.map((item, index) => {
+            // 为所有属性添加默认值，防止访问不存在的属性
+            const character = characters.find(c => c.id === item.characterId)?.name || '未知角色';
+            const action = item.action || '未知动作';
+            const time = typeof item.time === 'number' ? item.time : 0;
+            const cost = typeof item.cost === 'number' ? item.cost : 0;
+            const remainingCost = typeof item.remainingCost === 'number' ? item.remainingCost : 0;
+            const costDeduction = typeof item.costDeduction === 'number' ? item.costDeduction : 0;
+            const timeInterval = typeof item.timeInterval === 'number' ? item.timeInterval : 0;
+            
+            return `
+                <div class="timeline-card">
+                    <div class="timeline-card-header">
+                        <div class="timeline-card-title">
+                            <i class="fas fa-bolt text-primary"></i>
+                            <span>${character} - ${action}</span>
+                        </div>
+                        <div class="timeline-card-meta">
+                            <span class="cost-badge">${remainingCost.toFixed(2)}c</span>
+                            <span class="sequence-badge">第 ${index + 1} 次</span>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-card-content">
+                        <div class="timeline-card-detail">
+                            <span class="timeline-card-detail-label">触发时间</span>
+                            <span class="timeline-card-detail-value">${this.formatTime(time)}</span>
+                        </div>
+                        <div class="timeline-card-detail">
+                            <span class="timeline-card-detail-label">技能费用</span>
+                            <span class="timeline-card-detail-value">${cost.toFixed(2)}c</span>
+                        </div>
+                        <div class="timeline-card-detail">
+                            <span class="timeline-card-detail-label">费用扣除</span>
+                            <span class="timeline-card-detail-value">${costDeduction.toFixed(2)}c</span>
+                        </div>
+                        <div class="timeline-card-detail">
+                            <span class="timeline-card-detail-label">时间间隔</span>
+                            <span class="timeline-card-detail-value">${timeInterval.toFixed(2)}s</span>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-card-footer">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-clock mr-1"></i>
+                            ${this.formatTime(time)}
+                        </div>
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-user mr-1"></i>
+                            ${character}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        timelineEventsContainer.innerHTML = timelineCardsHTML;
+    }
+    
+    /**
+     * 格式化时间为00:00.000格式
+     * @param {number} seconds - 秒数
+     * @returns {string} 格式化后的时间字符串
+     */
+    formatTime(seconds) {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        const intSeconds = Math.floor(remainingSeconds);
+        const milliseconds = Math.floor((remainingSeconds - intSeconds) * 1000);
+        
+        return `${minutes.toString().padStart(2, '0')}:${intSeconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+    }
+    
+    /**
+     * 初始化费用变化曲线
+     * @param {Array} items - 数据项数组
+     * @param {string} chartType - 图表类型，默认为line
+     */
+    initCostChart(items, chartType = 'line') {
+        const ctx = document.getElementById('costChart');
+        if (!ctx) return;
+        
+        // 显示加载动画
+        const chartLoading = document.getElementById('chartLoading');
+        if (chartLoading) {
+            chartLoading.classList.remove('hidden');
+        }
+        
+        // 销毁已存在的图表实例
+        if (window.costChart && typeof window.costChart.destroy === 'function') {
+            try {
+                window.costChart.destroy();
+            } catch (error) {
+                console.error('销毁图表实例时出错:', error);
+            }
+        }
+        
+        // 清除window.costChart引用
+        window.costChart = null;
+        
+        // 准备图表数据（prepareChartData已包含数据验证）
+        const chartData = this.prepareChartData(items, chartType);
+        
+        // 使用全局Chart对象创建图表
+        const chartConstructor = window.Chart.default || window.Chart;
+        
+        try {
+            window.costChart = new chartConstructor(ctx, {
+                type: chartType,
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1,
+                            padding: 10,
+                            cornerRadius: 6,
+                            callbacks: {
+                                title: function(context) {
+                                    return `时间: ${context[0].label}`;
+                                },
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}c`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            title: {
+                                display: true,
+                                text: '费用 (c)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: false
+                            },
+                            grid: {
+                                display: true
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('创建图表时出错:', error);
+        } finally {
+            // 隐藏加载动画
+            setTimeout(() => {
+                if (chartLoading) {
+                    chartLoading.classList.add('hidden');
+                }
+            }, 300);
+        }
+    }
+    
+    /**
+     * 准备图表数据
+     * @param {Array} items - 数据项数组
+     * @param {string} chartType - 图表类型
+     * @returns {Object} 图表数据对象
+     */
+    prepareChartData(items, chartType) {
+        // 过滤有效数据项：确保item是对象且具有必要属性
+        const validItems = items.filter(item => {
+            if (!item || typeof item !== 'object') return false;
+            return typeof item.time === 'number' && 
+                   typeof item.cost === 'number' && 
+                   typeof item.remainingCost === 'number';
+        });
+        
+        // 如果没有有效数据，返回空数据结构
+        if (validItems.length === 0) {
+            return {
+                labels: ['00:00.000'],
+                datasets: [
+                    {
+                        label: '剩余费用 (c)',
+                        data: [0],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 2,
+                        fill: chartType === 'line'
+                    },
+                    {
+                        label: '触发费用 (c)',
+                        data: [0],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 2,
+                        fill: chartType === 'line'
+                    }
+                ]
+            };
+        }
+        
+        // 确保items按时间倒序排序（从大到小）
+        const sortedItems = [...validItems].sort((a, b) => b.time - a.time);
+        
+        // 提取时间点和对应费用，确保所有值都是数字
+        const labels = sortedItems.map(item => this.formatTime(item.time));
+        const remainingCostData = sortedItems.map(item => typeof item.remainingCost === 'number' ? item.remainingCost : 0);
+        const triggerCostData = sortedItems.map(item => typeof item.cost === 'number' ? item.cost : 0);
+        
+        return {
+            labels: labels,
+            datasets: [
+                {
+                    label: '剩余费用 (c)',
+                    data: remainingCostData,
+                    borderColor: '#3b82f6',
+                    backgroundColor: chartType === 'line' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.8)',
+                    borderWidth: 2,
+                    fill: chartType === 'line',
+                    tension: 0.4
+                },
+                {
+                    label: '触发费用 (c)',
+                    data: triggerCostData,
+                    borderColor: '#ef4444',
+                    backgroundColor: chartType === 'line' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(239, 68, 68, 0.8)',
+                    borderWidth: 2,
+                    fill: chartType === 'line',
+                    tension: 0.4
+                }
+            ]
+        };
+    }
+    
+    /**
+     * 更新费用图表
+     */
+    updateCostChart() {
+        // 检查是否在时间轴视图中
+        const timelineModal = document.getElementById('timelineModal');
+        if (timelineModal && !timelineModal.classList.contains('hidden')) {
+            // 如果时间轴模态框显示，更新费用变化曲线
+            const items = this.dataManager.getDataItems();
+            this.initCostChart(items, window.costChartType || 'line');
+        }
+    }
+    
+    /**
+     * 初始化时间轴交互功能
+     * @param {Array} items - 数据项数组
+     * @param {Array} characters - 角色数组
+     */
+    initTimelineInteractions(items, characters) {
+        // 图表类型切换功能
+        const toggleChartTypeBtn = document.getElementById('toggleChartType');
+        if (toggleChartTypeBtn) {
+            let chartType = 'line';
+            
+            toggleChartTypeBtn.addEventListener('click', () => {
+                // 切换图表类型
+                chartType = chartType === 'line' ? 'bar' : 'line';
+                window.costChartType = chartType;
+                
+                // 更新按钮文本
+                toggleChartTypeBtn.innerHTML = `
+                    <i class="fas fa-chart-${chartType === 'line' ? 'line' : 'bar'}"></i>
+                    <span>切换到${chartType === 'line' ? '柱状图' : '折线图'}</span>
+                `;
+                
+                // 获取最新的数据
+                const latestItems = this.dataManager.getDataItems();
+                
+                // 重新初始化图表
+                this.initCostChart(latestItems, chartType);
+            });
         }
     }
 

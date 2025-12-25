@@ -71,11 +71,15 @@ class Navbar {
             this.closeAllMenus();
         });
 
-        // 菜单内部点击阻止冒泡
+        // 菜单内部点击阻止冒泡并关闭菜单
         const menus = document.querySelectorAll('.menu-dropdown');
         menus.forEach(menu => {
             menu.addEventListener('click', (e) => {
                 e.stopPropagation();
+                // 当点击菜单项时关闭当前菜单
+                if (e.target.closest('.menu-dropdown-item')) {
+                    menu.classList.remove('show');
+                }
             });
         });
 
@@ -101,10 +105,16 @@ class Navbar {
      * @param {HTMLElement} menu - 菜单元素
      */
     toggleMenu(menu) {
-        // 关闭其他菜单
+        // 检查当前菜单是否已经显示
+        const isVisible = menu.classList.contains('show');
+        
+        // 关闭所有菜单
         this.closeAllMenus();
-        // 切换当前菜单
-        menu.classList.toggle('show');
+        
+        // 如果当前菜单之前是隐藏的，则显示它；如果之前是显示的，则保持关闭状态
+        if (!isVisible) {
+            menu.classList.add('show');
+        }
     }
 
     /**

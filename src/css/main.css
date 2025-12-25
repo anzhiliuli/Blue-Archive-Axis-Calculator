@@ -117,6 +117,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
+  /* 导航栏菜单项间距统一控制 */
 }
 
 /* 确保li元素垂直对齐 */
@@ -126,8 +127,8 @@ body {
   height: 100%;
 }
 
-/* 添加分隔线样式 - 调整为更清晰的分隔效果 */
-.app-header .nav-menu ul li:not(:last-child)::after {
+/* 移除分隔线样式，统一由gap控制间距 */
+/* .app-header .nav-menu ul li:not(:last-child)::after {
   content: '';
   display: inline-block;
   width: 1px;
@@ -135,7 +136,7 @@ body {
   background: rgba(255, 255, 255, 0.2);
   margin-left: 1rem;
   vertical-align: middle;
-}
+} */
 
 /* 菜单按钮样式优化 */
 .menu-button {
@@ -154,6 +155,8 @@ body {
   position: relative;
   backdrop-filter: blur(5px);
   min-height: 40px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .menu-button:hover {
@@ -228,13 +231,13 @@ body {
   color: var(--text-primary);
   font-size: 0.975rem;
   font-weight: var(--font-medium);
-  padding: 0.9375rem 1.375rem;
+  padding: 0.875rem 1.25rem;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-base) var(--transition-curve);
   display: flex;
   align-items: center;
-  gap: 0.875rem;
+  gap: 0.75rem;
   width: 100%;
   text-align: left;
   backdrop-filter: none;
@@ -243,6 +246,7 @@ body {
   letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: visible;
+  margin: 0;
 }
 
 .menu-dropdown-item:hover {
@@ -1081,14 +1085,6 @@ pre code {
     background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 253, 244, 0.6) 100%) !important;
 }
 
-/* 4. 时间轴模态框 */
-#timelineModal .modal-content {
-    max-width: 90% !important;
-    max-height: 90vh !important;
-    width: 1000px !important;
-    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(253, 240, 249, 0.6) 100%) !important;
-}
-
 /* 5. 使用手册模态框 */
 #manualModal .modal-content {
     max-width: 90% !important;
@@ -1127,23 +1123,253 @@ pre code {
     background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 253, 255, 0.6) 100%) !important;
 }
 
-/* 滚动条样式 */
+/* 11. 时间轴视图模态框 - 复刻角色预设玻璃态效果 */
+#timelineModal .modal-content {
+    /* 玻璃态核心样式 - 复刻角色预设 */
+    background: rgba(249, 250, 251, 0.7) !important;
+    backdrop-filter: blur(16px) isolate;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        0 12px 32px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5)
+        !important;
+    /* 弹窗尺寸 */
+    max-width: 900px !important;
+    width: 90% !important;
+    max-height: 85vh !important;
+    height: auto !important;
+    min-height: 70vh !important;
+    /* 渐变背景增强玻璃质感 */
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 249, 255, 0.6) 100%) !important;
+    /* 确保模态框本身不滚动 */
+    overflow: hidden !important;
+}
+
+/* 时间轴模态框主体 - 允许滚动 */
+#timelineModal .modal-body {
+    /* 允许整个模态框主体滚动，滑动条显示在模态框内部 */
+    overflow-y: auto !important;
+    padding: 20px !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+}
+
+/* 时间轴模态框头部 - 复刻角色预设 */
+#timelineModal .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+    padding-bottom: 1rem !important;
+    margin-bottom: 1.5rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+/* 时间轴模态框头部标题 - 复刻角色预设 */
+#timelineModal .modal-header h3 {
+    color: #1f2937 !important;
+    font-weight: 700 !important;
+    font-size: 1.25rem !important;
+}
+
+/* 时间轴统计卡片 - 复刻角色预设列表项效果 */
+#timelineModal .stat-card {
+    /* 列表项玻璃态效果 - 复刻角色预设 */
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(12px) isolate !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* 时间轴统计卡片悬停效果 - 复刻角色预设 */
+#timelineModal .stat-card:hover {
+    background: rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.08),
+        0 4px 12px rgba(59, 130, 246, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+    transform: translateY(-2px) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* 时间轴图表容器 - 复刻角色预设列表项效果 */
+#timelineModal .chart-container {
+    /* 玻璃态效果 - 复刻角色预设 */
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(12px) isolate !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* 费用变化曲线容器 - 使用ID确保高度生效 */
+#timelineModal #costChartContainer {
+    height: 300px !important;
+    min-height: 300px !important;
+    width: 100% !important;
+}
+
+/* 确保canvas填充整个容器 */
+#timelineModal #costChart {
+    height: 100% !important;
+    width: 100% !important;
+}
+
+/* 时间轴图表容器悬停效果 - 复刻角色预设 */
+#timelineModal .chart-container:hover {
+    background: rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.08),
+        0 4px 12px rgba(59, 130, 246, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+    transform: translateY(-2px) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* 时间轴事件容器 - 随内容自然扩展 */
+#timelineModal .timeline-events-container {
+    /* 移除固定高度和滚动，由模态框主体控制滚动 */
+    max-height: none !important;
+    overflow-y: visible !important;
+    /* 确保网格布局正常工作 */
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+    padding-right: 8px !important;
+}
+
+/* 时间轴空状态样式 - 居中显示 */
+#timelineModal .timeline-empty-state {
+    grid-column: 1 / -1; /* 跨越所有列 */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 4rem 2rem !important;
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(12px) isolate !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    margin: 2rem 0 !important;
+}
+
+#timelineModal .timeline-empty-state i {
+    font-size: 3rem !important;
+    color: #94a3b8 !important;
+    margin-bottom: 1rem !important;
+}
+
+#timelineModal .timeline-empty-state h4 {
+    color: #374151 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+#timelineModal .timeline-empty-state p {
+    color: #6b7280 !important;
+    font-size: 0.9rem !important;
+}
+
+/* 时间轴事件卡片容器 - 复刻角色预设列表项效果 */
+#timelineModal .glass-effect.p-4.rounded-xl.shadow-lg {
+    /* 玻璃态效果 - 复刻角色预设 */
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(12px) isolate !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* 时间轴卡片 - 复刻角色预设列表项效果 */
+#timelineModal .timeline-card {
+    /* 玻璃态效果 - 复刻角色预设 */
+    background: rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(12px) isolate !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 1.25rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+/* 时间轴卡片悬停效果 - 复刻角色预设 */
+#timelineModal .timeline-card:hover {
+    background: rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.08),
+        0 4px 12px rgba(59, 130, 246, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+    transform: translateY(-2px) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* 滚动条样式 - 优化为玻璃态风格，增加宽度使其更明显 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
+  background: rgba(255, 255, 255, 0.2) !important;
+  backdrop-filter: blur(8px);
+  border-radius: 5px;
+  margin: 5px 0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 4px;
+  background: rgba(59, 130, 246, 0.6) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
+  background: rgba(59, 130, 246, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scaleX(1.1);
+}
+
+/* 滚动条角落样式 */
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox滚动条样式 */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: rgba(59, 130, 246, 0.6) rgba(255, 255, 255, 0.2);
+}
+
+/* 时间轴模态框滚动条特殊样式 - 确保在模态框中明显可见 */
+#timelineModal ::-webkit-scrollbar {
+  width: 12px;
+}
+
+#timelineModal ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border-radius: 6px;
+}
+
+#timelineModal ::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.7) !important;
+  border-radius: 6px;
 }
 
 /* 选择文本样式 */

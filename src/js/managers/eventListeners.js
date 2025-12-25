@@ -107,46 +107,7 @@ class EventListeners {
             });
         }
         
-        // 添加顶部菜单按钮事件
-        const fileMenuBtn = document.getElementById('fileMenuBtn');
-        if (fileMenuBtn) {
-            fileMenuBtn.addEventListener('click', () => {
-                const fileMenu = document.getElementById('fileMenu');
-                if (fileMenu) {
-                    fileMenu.classList.toggle('hidden');
-                }
-            });
-        }
-        
-        const editMenuBtn = document.getElementById('editMenuBtn');
-        if (editMenuBtn) {
-            editMenuBtn.addEventListener('click', () => {
-                const editMenu = document.getElementById('editMenu');
-                if (editMenu) {
-                    editMenu.classList.toggle('hidden');
-                }
-            });
-        }
-        
-        const toolsMenuBtn = document.getElementById('toolsMenuBtn');
-        if (toolsMenuBtn) {
-            toolsMenuBtn.addEventListener('click', () => {
-                const toolsMenu = document.getElementById('toolsMenu');
-                if (toolsMenu) {
-                    toolsMenu.classList.toggle('hidden');
-                }
-            });
-        }
-        
-        const helpMenuBtn = document.getElementById('helpMenuBtn');
-        if (helpMenuBtn) {
-            helpMenuBtn.addEventListener('click', () => {
-                const helpMenu = document.getElementById('helpMenu');
-                if (helpMenu) {
-                    helpMenu.classList.toggle('hidden');
-                }
-            });
-        }
+
         
         // 添加初始化按钮事件
         const initializeBtn = document.getElementById('initializeBtn');
@@ -372,16 +333,21 @@ class EventListeners {
         if (toggleFilterBtn) {
             toggleFilterBtn.addEventListener('click', () => {
                 const filterContent = document.getElementById('filterContent');
-                const icon = toggleFilterBtn.querySelector('i.fas.fa-chevron-down');
+                // 使用更通用的选择器，确保始终能找到图标元素
+                const icon = toggleFilterBtn.querySelector('i.fas');
                 
                 if (filterContent.classList.contains('hidden')) {
                     // 展开筛选面板
                     filterContent.classList.remove('hidden');
-                    icon.classList.add('rotate-180');
+                    if (icon) {
+                        icon.classList.add('rotate-180');
+                    }
                 } else {
                     // 收起筛选面板
                     filterContent.classList.add('hidden');
-                    icon.classList.remove('rotate-180');
+                    if (icon) {
+                        icon.classList.remove('rotate-180');
+                    }
                 }
             });
         }
@@ -391,20 +357,25 @@ class EventListeners {
         if (toggleAddItemBtn) {
             toggleAddItemBtn.addEventListener('click', () => {
                 const addItemContent = document.getElementById('addItemContent');
-                const icon = toggleAddItemBtn.querySelector('i.fas.fa-chevron-up');
+                // 使用更通用的选择器，确保始终能找到图标元素
+                const icon = toggleAddItemBtn.querySelector('.fa-chevron-up, .fa-chevron-down') || toggleAddItemBtn.querySelector('i.fas');
                 
                 if (addItemContent.classList.contains('hidden')) {
                     // 展开添加数据项面板
                     addItemContent.classList.remove('hidden');
-                    icon.classList.remove('rotate-180');
-                    icon.classList.add('fa-chevron-up');
-                    icon.classList.remove('fa-chevron-down');
+                    if (icon) {
+                        icon.classList.remove('rotate-180');
+                        icon.classList.add('fa-chevron-up');
+                        icon.classList.remove('fa-chevron-down');
+                    }
                 } else {
                     // 收起添加数据项面板
                     addItemContent.classList.add('hidden');
-                    icon.classList.add('rotate-180');
-                    icon.classList.remove('fa-chevron-up');
-                    icon.classList.add('fa-chevron-down');
+                    if (icon) {
+                        icon.classList.add('rotate-180');
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                    }
                 }
             });
         }
@@ -481,20 +452,7 @@ class EventListeners {
         // 分页按钮事件处理
         this.setupPaginationListeners();
                
-        // 退出应用按钮
-        const exitAppBtn = document.getElementById('exitApp');
-        if (exitAppBtn) {
-            exitAppBtn.addEventListener('click', () => {
-                this.modalManager.showConfirmModal(
-                    '退出应用',
-                    '确定要退出应用吗？当前未保存的数据将丢失。',
-                    () => {
-                        // 这里只是模拟退出，实际应用中可能需要更复杂的逻辑
-                        this.modalManager.showToast('感谢使用！', 'success');
-                    }
-                );
-            });
-        }
+
         
         // 撤销操作按钮
         const undoActionBtn = document.getElementById('undoAction');
@@ -564,9 +522,7 @@ class EventListeners {
             });
         }
         
-
-        
-        // 显示时间线按钮
+        // 显示时间轴按钮
         const timelineViewBtn = document.getElementById('timelineViewBtn');
         if (timelineViewBtn) {
             timelineViewBtn.addEventListener('click', () => {
@@ -576,6 +532,8 @@ class EventListeners {
                 this.uiRenderer.initTimelineView();
             });
         }
+        
+
         
         // 持续回费功能按钮
         const skillBindingBtn = document.getElementById('skillBindingBtn');

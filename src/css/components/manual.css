@@ -65,6 +65,7 @@
     flex-direction: column;
     overflow: hidden;
     box-shadow: var(--manual-shadow-sm);
+    margin-left: -15px;
 }
 
 /* 左侧导航头部 */
@@ -94,6 +95,9 @@
     background-clip: text;
     margin-bottom: 0.25rem;
     transition: all 0.3s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .manual-nav-header p {
@@ -101,6 +105,9 @@
     color: var(--manual-text-secondary);
     margin: 0;
     transition: all 0.3s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* 导航内容区域 */
