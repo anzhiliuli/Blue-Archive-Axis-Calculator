@@ -1,7 +1,7 @@
 // 数据管理器模块
 class DataManager {
     constructor() {
-        this.characters = [];    // 角色列表
+        this.characters = [];    // 学生列表
         this.rules = [];         // 关联规则列表
         this.dataItems = [];     // 数据项列表
         this.currentCost = 0;    // 当前费用
@@ -12,7 +12,7 @@ class DataManager {
         
         // 新增：导出信息字段
         this.exportInfo = {
-            positions: ["", "", "", ""], // 角色站位（4个）
+            positions: ["", "", "", ""], // 学生站位（4个）
             initialSkills: ["", "", ""], // 初始技能（3个）
             videoAxisLink: "" // 视频轴链接
         };
@@ -21,7 +21,7 @@ class DataManager {
         this.currentPage = 1;    // 当前页码
         this.pageSize = 10;      // 每页显示行数
         
-        // 预设角色数据
+        // 预设学生数据
         this.presetCharacters = [
             { name: '水白', costRecoveryRate: 0.07, skillCost: 3, costIncrease: 20.2, isChargePercentage: true },
             { name: '礼奈', costRecoveryRate: 0.07, skillCost: 6, costIncrease: 0, isChargePercentage: false },
@@ -48,20 +48,20 @@ class DataManager {
         return this.nextId++;
     }
 
-    // 添加角色
+    // 添加学生
     addCharacter(characterData) {
         this.saveState();
-        // 检查角色名称是否重复
+        // 检查学生名称是否重复
         const nameExists = this.characters.some(character => 
             character.name.toLowerCase() === characterData.name.toLowerCase()
         );
         if (nameExists) {
-            throw new Error('角色名称已存在');
+            throw new Error('学生名称已存在');
         }
 
         const newCharacter = {
             id: this.getNextId(),
-            name: characterData.name || '新角色',
+            name: characterData.name || '新学生',
             costRecoveryRate: parseFloat(characterData.costRecoveryRate) || 0,
             skillCost: parseFloat(characterData.skillCost) || 0,
             costIncrease: parseFloat(characterData.costIncrease) || 0,
@@ -72,18 +72,18 @@ class DataManager {
         return newCharacter;
     }
 
-    // 更新角色
+    // 更新学生
     updateCharacter(id, characterData) {
         this.saveState();
         const index = this.characters.findIndex(character => character.id === id);
         if (index !== -1) {
-            // 检查角色名称是否重复（排除当前角色）
+            // 检查学生名称是否重复（排除当前学生）
             if (characterData.name) {
                 const nameExists = this.characters.some(character => 
                     character.id !== id && character.name.toLowerCase() === characterData.name.toLowerCase()
                 );
                 if (nameExists) {
-                    throw new Error('角色名称已存在');
+                    throw new Error('学生名称已存在');
                 }
             }
 
@@ -102,7 +102,7 @@ class DataManager {
         return null;
     }
 
-    // 删除角色
+    // 删除学生
     deleteCharacter(id) {
         this.saveState();
         const index = this.characters.findIndex(character => character.id === id);
@@ -118,12 +118,12 @@ class DataManager {
         return null;
     }
 
-    // 获取角色列表
+    // 获取学生列表
     getCharacters() {
         return [...this.characters];
     }
 
-    // 根据ID获取角色
+    // 根据ID获取学生
     getCharacterById(id) {
         return this.characters.find(character => character.id === id) || null;
     }
@@ -244,7 +244,7 @@ class DataManager {
         return [...this.rules];
     }
 
-    // 根据角色ID获取关联规则
+    // 根据学生ID获取关联规则
     getRulesByCharacterId(characterId) {
         return this.rules.filter(rule => rule.characterId === characterId);
     }
@@ -553,17 +553,17 @@ class DataManager {
         }
     }
     
-    // 获取预设角色列表
+    // 获取预设学生列表
     getPresetCharacters() {
         return [...this.presetCharacters];
     }
     
-    // 检查角色是否已添加
+    // 检查学生是否已添加
     isCharacterAdded(characterName) {
         return this.characters.some(character => character.name === characterName);
     }
     
-    // 清空所有角色
+    // 清空所有学生
     clearAllCharacters() {
         this.saveState();
         this.characters = [];

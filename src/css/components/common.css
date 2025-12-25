@@ -319,7 +319,7 @@
   min-width: 120px;
 }
 
-/* 优化角色表格特定列的宽度和对齐方式 */
+/* 优化学生表格特定列的宽度和对齐方式 */
 #charactersTable th[data-field="name"] {
   width: 25%;
   text-align: left;

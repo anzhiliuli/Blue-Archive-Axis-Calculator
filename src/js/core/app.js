@@ -83,9 +83,9 @@ class App {
      * 初始化数据表格
      */
     initTables() {
-        // 角色表格配置
+        // 学生表格配置
         this.tables.characters = new DataTable('charactersTable', [
-            { field: 'name', title: '角色名', sortable: true },
+            { field: 'name', title: '学生名', sortable: true },
             { field: 'costRecoveryRate', title: '回费速度', sortable: true },
             { field: 'skillCost', title: '技能费用', sortable: true },
             { field: 'costIncrease', title: '回费增加', sortable: true },
@@ -95,8 +95,8 @@ class App {
         ], {
             showActions: true,
             actions: [
-                { icon: 'fa-pencil', text: '编辑', className: 'btn-edit', title: '编辑角色', callback: (item) => this.editCharacter(item) },
-                { icon: 'fa-trash', text: '删除', className: 'btn-delete', title: '删除角色', callback: (item) => this.deleteCharacter(item) }
+                { icon: 'fa-pencil', text: '编辑', className: 'btn-edit', title: '编辑学生', callback: (item) => this.editCharacter(item) },
+                { icon: 'fa-trash', text: '删除', className: 'btn-delete', title: '删除学生', callback: (item) => this.deleteCharacter(item) }
             ]
         });
 
@@ -117,13 +117,13 @@ class App {
                 return this.utils.format.timeMMSSfff(item.time);
             }},
             { field: 'action', title: '动作', sortable: true },
-            { field: 'characterId', title: '角色', sortable: true, render: (item) => {
-                // 初始化行不显示角色
+            { field: 'characterId', title: '学生', sortable: true, render: (item) => {
+                // 初始化行不显示学生
                 if (item.action === '初始化') {
                     return '-';
                 }
                 const character = this.dataManager.getCharacters().find(c => c.id === item.characterId);
-                return character ? character.name : '未知角色';
+                return character ? character.name : '未知学生';
             }},
             { field: 'cost', title: '触发费用', sortable: true, render: (item) => {
                 // 初始化行费用为0
@@ -175,26 +175,26 @@ class App {
     }
 
     /**
-     * 编辑角色
-     * @param {Object} character - 角色数据
+     * 编辑学生
+     * @param {Object} character - 学生数据
      */
     editCharacter(character) {
-        // 调用模态框管理器显示编辑角色的模态框
+        // 调用模态框管理器显示编辑学生的模态框
         this.modalManager.showModal('editCharacterModal', character);
     }
 
     /**
-     * 删除角色
-     * @param {Object} character - 角色数据
+     * 删除学生
+     * @param {Object} character - 学生数据
      */
     deleteCharacter(character) {
         this.modalManager.showConfirmModal(
-            '删除角色',
-            `确定要删除角色 "${character.name}" 吗？此操作不可撤销。`,
+            '删除学生',
+            `确定要删除学生 "${character.name}" 吗？此操作不可撤销。`,
             () => {
                 this.dataManager.deleteCharacter(character.id);
                 this.uiRenderer.refreshAll();
-                this.modalManager.showToast(`角色 "${character.name}" 已成功删除`, 'success');
+                this.modalManager.showToast(`学生 "${character.name}" 已成功删除`, 'success');
             }
         );
     }

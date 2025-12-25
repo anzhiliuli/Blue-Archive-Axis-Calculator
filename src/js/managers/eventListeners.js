@@ -19,15 +19,15 @@ class EventListeners {
         this.initGeneralListeners();
     }
 
-    // 初始化角色相关事件监听器
+    // 初始化学生相关事件监听器
     initCharacterListeners() {
-        // 添加角色按钮
+        // 添加学生按钮
         const addCharacterBtn = document.getElementById('add-character-btn');
         if (addCharacterBtn) {
             addCharacterBtn.addEventListener('click', () => this.showAddCharacterModal());
         }
 
-        // 编辑角色按钮（动态添加，使用事件委托）
+        // 编辑学生按钮（动态添加，使用事件委托）
         const characterList = document.getElementById('charactersTable');
         if (characterList) {
             characterList.addEventListener('click', (e) => {
@@ -43,19 +43,19 @@ class EventListeners {
             });
         }
 
-        // 添加角色表单提交
+        // 添加学生表单提交
         const addCharacterForm = document.getElementById('addCharacterForm');
         if (addCharacterForm) {
             addCharacterForm.addEventListener('submit', (e) => this.handleAddCharacter(e));
         }
 
-        // 编辑角色表单提交
+        // 编辑学生表单提交
         const editCharacterForm = document.getElementById('edit-character-form');
         if (editCharacterForm) {
             editCharacterForm.addEventListener('submit', (e) => this.handleEditCharacter(e));
         }
         
-        // 添加角色复选框状态变化监听
+        // 添加学生复选框状态变化监听
         const isChargePercentageCheckbox = document.getElementById('isChargePercentage');
         if (isChargePercentageCheckbox) {
             isChargePercentageCheckbox.addEventListener('change', (e) => {
@@ -64,13 +64,13 @@ class EventListeners {
             });
         }
 
-        // 保存编辑角色按钮
+        // 保存编辑学生按钮
         const saveEditCharacterBtn = document.getElementById('saveEditCharacterBtn');
         if (saveEditCharacterBtn) {
             saveEditCharacterBtn.addEventListener('click', (e) => this.handleEditCharacter(e));
         }
         
-        // 监听编辑角色模态框显示事件
+        // 监听编辑学生模态框显示事件
         const editModal = document.getElementById('editCharacterModal');
         if (editModal) {
             editModal.addEventListener('modal-shown', (e) => {
@@ -91,7 +91,7 @@ class EventListeners {
             });
         }
         
-        // 编辑角色模态框百分比复选框事件监听器
+        // 编辑学生模态框百分比复选框事件监听器
         const editIsChargePercentage = document.getElementById('edit-is-charge-percentage');
         if (editIsChargePercentage) {
             editIsChargePercentage.addEventListener('change', (e) => {
@@ -260,7 +260,7 @@ class EventListeners {
                 // 清空现有数据项并设置初始化状态
                 this.dataManager.clearDataItems();
                 
-                // 清空角色关联规则
+                // 清空学生关联规则
                 this.dataManager.rules = [];
                 
                 // 清空持续回费设置
@@ -281,11 +281,11 @@ class EventListeners {
                 // 移除初始费用设定，费用从0开始
                 this.dataManager.setCurrentCost(0);
                 
-                // 获取当前角色列表
+                // 获取当前学生列表
                 const characters = this.dataManager.getCharacters();
                 
                 // 初始化后在数据表中生成默认行，时间为初始化时间
-                // 直接创建符合格式要求的默认数据项，即使没有角色也生成
+                // 直接创建符合格式要求的默认数据项，即使没有学生也生成
                 const defaultItem = {
                     id: `item_${Date.now()}`,
                     characterId: characters.length > 0 ? characters[0].id : 0,
@@ -528,7 +528,7 @@ class EventListeners {
             redoActionBtn.disabled = !this.dataManager.canRedo();
         }
         
-        // 角色预设按钮
+        // 学生预设按钮
         const characterPresetsBtn = document.getElementById('characterPresets');
         if (characterPresetsBtn) {
             characterPresetsBtn.addEventListener('click', () => {
@@ -604,11 +604,11 @@ class EventListeners {
             });
         }
         
-        // 角色特殊技能按钮
+        // 学生特殊技能按钮
         const specialSkillsBtn = document.getElementById('specialSkillsBtn');
         if (specialSkillsBtn) {
             specialSkillsBtn.addEventListener('click', () => {
-                // 显示角色特殊技能模态框
+                // 显示学生特殊技能模态框
                 this.modalManager.showModal('specialSkillsModal');
                 // 渲染技能卡片
                 this.uiRenderer.renderSpecialSkills();
@@ -687,7 +687,7 @@ class EventListeners {
                 if (this.app && !this.app.isDataTableInitialized()) {
                     this.modalManager.showToast('请先初始化数据表', 'error');
                 } else if (this.dataManager.characters.length === 0) {
-                    this.modalManager.showToast('请先添加角色', 'error');
+                    this.modalManager.showToast('请先添加学生', 'error');
                 } else {
                     const dataItems = this.dataManager.getAllDataItems();
                     if (dataItems.length === 0) {
@@ -782,7 +782,7 @@ class EventListeners {
 
     }
 
-    // 显示添加角色模态框
+    // 显示添加学生模态框
     showAddCharacterModal() {
         this.modalManager.showModal('addCharacterModal');
         
@@ -792,7 +792,7 @@ class EventListeners {
         costIncreaseInput.disabled = !checkbox.checked;
     }
 
-    // 显示编辑角色模态框
+    // 显示编辑学生模态框
     showEditCharacterModal(characterId) {
         const character = this.dataManager.getCharacterById(characterId);
         if (!character) return;
@@ -813,25 +813,25 @@ class EventListeners {
         this.modalManager.showModal('editCharacterModal');
     }
 
-    // 处理添加角色
+    // 处理添加学生
     handleAddCharacter(e) {
         e.preventDefault();
 
-        // 检查角色数量是否已达上限
+        // 检查学生数量是否已达上限
         if (this.dataManager.getCharacters().length >= 6) {
-            this.modalManager.showToast('角色数量已达上限，最多只能添加6个角色', 'error');
+            this.modalManager.showToast('学生数量已达上限，最多只能添加6个学生', 'error');
             return;
         }
 
         // 获取复选框状态
         const isChargePercentageChecked = document.getElementById('isChargePercentage').checked;
         
-        // 检查是否已有其他角色启用了回费
+        // 检查是否已有其他学生启用了回费
         const existingChargingCharacter = this.dataManager.getCharacters().find(character => character.isChargePercentage);
         
-        // 如果当前角色启用了回费且已有其他角色启用，则显示提示
+        // 如果当前学生启用了回费且已有其他学生启用，则显示提示
         if (isChargePercentageChecked && existingChargingCharacter) {
-            this.modalManager.showToast(`已有角色"${existingChargingCharacter.name}"启用了回费，只能有一个角色启用此功能`, 'error');
+            this.modalManager.showToast(`已有学生"${existingChargingCharacter.name}"启用了回费，只能有一个学生启用此功能`, 'error');
             return;
         }
 
@@ -855,7 +855,7 @@ class EventListeners {
         }
 
         try {
-            // 添加角色
+            // 添加学生
             const character = this.dataManager.addCharacter(formData);
             
             // 刷新UI
@@ -865,12 +865,12 @@ class EventListeners {
             this.modalManager.hideModal('addCharacterModal');
             
             // 显示成功提示
-            this.modalManager.showToast('角色添加成功', 'success');
+            this.modalManager.showToast('学生添加成功', 'success');
             
             // 如果启用了回费，显示提醒
             if (isChargePercentageChecked) {
                 this.modalManager.showToast(
-                    `角色 ${character.name} 已设置回费增加：${character.costIncrease}%，` +
+                    `学生 ${character.name} 已设置回费增加：${character.costIncrease}%，` +
                     `每次技能释放后将增加额外的回费效率。`,
                     'info'
                 );
@@ -886,7 +886,7 @@ class EventListeners {
         }
     }
 
-    // 处理编辑角色
+    // 处理编辑学生
     handleEditCharacter(e) {
         e.preventDefault();
 
@@ -895,14 +895,14 @@ class EventListeners {
         // 获取复选框状态
         const isChargePercentageChecked = document.getElementById('edit-is-charge-percentage').checked;
         
-        // 检查是否已有其他角色启用了回费，且该角色不是当前编辑的角色
+        // 检查是否已有其他学生启用了回费，且该学生不是当前编辑的学生
         const existingChargingCharacter = this.dataManager.getCharacters().find(character => 
             character.isChargePercentage && character.id !== characterId
         );
         
-        // 如果当前角色启用了回费且已有其他角色启用，则显示提示
+        // 如果当前学生启用了回费且已有其他学生启用，则显示提示
         if (isChargePercentageChecked && existingChargingCharacter) {
-            this.modalManager.showToast(`已有角色"${existingChargingCharacter.name}"启用了回费，只能有一个角色启用此功能`, 'error');
+            this.modalManager.showToast(`已有学生"${existingChargingCharacter.name}"启用了回费，只能有一个学生启用此功能`, 'error');
             return;
         }
         
@@ -926,7 +926,7 @@ class EventListeners {
         }
 
         try {
-            // 更新角色
+            // 更新学生
             const updatedCharacter = this.dataManager.updateCharacter(characterId, formData);
             
             // 刷新UI
@@ -935,13 +935,13 @@ class EventListeners {
             // 关闭模态框
             this.modalManager.hideModal('editCharacterModal');
             
-            // 高亮显示更新后的角色行
+            // 高亮显示更新后的学生行
             if (updatedCharacter) {
                 this.uiRenderer.highlightElement(`character-${updatedCharacter.id}`);
             }
             
             // 显示成功提示
-            this.modalManager.showToast('角色更新成功', 'success');
+            this.modalManager.showToast('学生更新成功', 'success');
         } catch (error) {
             // 显示错误提示
             this.modalManager.showToast(error.message, 'error');
@@ -994,51 +994,51 @@ class EventListeners {
         });
     }
     
-    // 确认删除角色
+    // 确认删除学生
     confirmDeleteCharacter(characterId) {
         const character = this.dataManager.getCharacterById(characterId);
         if (!character) return;
 
-        // 检查是否有数据项引用了该角色
+        // 检查是否有数据项引用了该学生
         const dataItems = this.dataManager.getAllDataItems();
         const hasReferences = dataItems.some(item => item.characterId === characterId);
 
         if (hasReferences) {
             // 如果有引用，显示提示信息
             this.modalManager.showToast(
-                `角色 "${character.name}" 已被引用，请删除相关数据项后再删除角色，或选择编辑角色属性。`,
+                `学生 "${character.name}" 已被引用，请删除相关数据项后再删除学生，或选择编辑学生属性。`,
                 'error'
             );
         } else {
             // 如果没有引用，显示确认删除的模态框
             this.modalManager.showConfirmModal(
                 '确认删除',
-                `确定要删除角色 "${character.name}" 吗？相关规则也会被删除。`,
+                `确定要删除学生 "${character.name}" 吗？相关规则也会被删除。`,
                 () => {
                     this.dataManager.deleteCharacter(characterId);
                     this.uiRenderer.refreshAll();
-                    this.modalManager.showToast('角色删除成功', 'success');
+                    this.modalManager.showToast('学生删除成功', 'success');
                 }
             );
         }
     }
     
-    // 显示角色预设模态框
+    // 显示学生预设模态框
     showCharacterPresetsModal() {
         const modal = document.getElementById('characterPresetsModal');
         const presetsList = document.getElementById('presetsList');
         const presetCount = document.getElementById('presetCount');
         
-        // 更新已添加角色数量
+        // 更新已添加学生数量
         presetCount.textContent = this.dataManager.getCharacters().length;
         
         // 清空现有列表
         presetsList.innerHTML = '';
         
-        // 获取预设角色
+        // 获取预设学生
         const presets = this.dataManager.getPresetCharacters();
         
-        // 生成预设角色列表
+        // 生成预设学生列表
         if (presets.length > 0) {
             presets.forEach(preset => {
                 const isAdded = this.dataManager.isCharacterAdded(preset.name);
@@ -1068,7 +1068,7 @@ class EventListeners {
                 presetsList.appendChild(presetItem);
             });
             
-            // 添加预设角色按钮事件
+            // 添加预设学生按钮事件
             const addPresetBtns = presetsList.querySelectorAll('.add-preset-btn');
             addPresetBtns.forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -1077,14 +1077,14 @@ class EventListeners {
                 });
             });
         } else {
-            // 预设角色列表为空时显示提示信息
+            // 预设学生列表为空时显示提示信息
             presetsList.innerHTML = `
                 <div class="text-center py-12 bg-gray-50 rounded-lg">
                     <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                         <i class="fas fa-clock text-2xl text-blue-600"></i>
                     </div>
-                    <h5 class="text-lg font-semibold text-gray-800 mb-2">预设角色功能开发中</h5>
-                    <p class="text-gray-500">角色预设功能将在后续版本更新，敬请期待</p>
+                    <h5 class="text-lg font-semibold text-gray-800 mb-2">预设学生功能开发中</h5>
+                    <p class="text-gray-500">学生预设功能将在后续版本更新，敬请期待</p>
                 </div>
             `;
         }
@@ -1093,20 +1093,20 @@ class EventListeners {
         this.modalManager.showModal('characterPresetsModal');
     }
     
-    // 添加预设角色
+    // 添加预设学生
     addPresetCharacter(presetName) {
-        // 检查角色数量是否已达上限
+        // 检查学生数量是否已达上限
         if (this.dataManager.getCharacters().length >= 6) {
-            this.modalManager.showToast('角色数量已达上限，最多只能添加6个角色', 'error');
+            this.modalManager.showToast('学生数量已达上限，最多只能添加6个学生', 'error');
             return;
         }
         
-        // 获取预设角色数据
+        // 获取预设学生数据
         const presets = this.dataManager.getPresetCharacters();
         const preset = presets.find(p => p.name === presetName);
         
         if (preset) {
-            // 添加角色
+            // 添加学生
             this.dataManager.addCharacter(preset);
             
             // 刷新UI
@@ -1116,20 +1116,20 @@ class EventListeners {
             this.showCharacterPresetsModal();
             
             // 显示成功提示
-            this.modalManager.showToast(`角色 "${preset.name}" 添加成功`, 'success');
+            this.modalManager.showToast(`学生 "${preset.name}" 添加成功`, 'success');
         }
     }
     
-    // 确认清空所有角色
+    // 确认清空所有学生
     confirmClearAllCharacters() {
         this.modalManager.showConfirmModal(
             '确认清空',
-            '确定要清空所有角色吗？此操作不可撤销。',
+            '确定要清空所有学生吗？此操作不可撤销。',
             () => {
                 this.dataManager.clearAllCharacters();
                 this.uiRenderer.refreshAll();
                 this.modalManager.hideModal('characterPresetsModal');
-                this.modalManager.showToast('所有角色已清空', 'success');
+                this.modalManager.showToast('所有学生已清空', 'success');
             }
         );
     }
@@ -1146,7 +1146,7 @@ class EventListeners {
             return;
         }
         
-        // 获取数据项和对应的角色
+        // 获取数据项和对应的学生
         const dataItem = this.dataManager.dataItems.find(item => item.id == selectedRowId);
         if (!dataItem) {
             selectedRowInfoEl.innerHTML = '<p class="text-sm text-red-500">未找到选中的数据项</p>';
@@ -1155,7 +1155,7 @@ class EventListeners {
         
         const character = this.dataManager.getCharacterById(dataItem.characterId);
         if (!character) {
-            selectedRowInfoEl.innerHTML = '<p class="text-sm text-red-500">未找到对应的角色</p>';
+            selectedRowInfoEl.innerHTML = '<p class="text-sm text-red-500">未找到对应的学生</p>';
             return;
         }
         
@@ -1212,7 +1212,7 @@ class EventListeners {
         window.selectedTargetRowId = null;
     }
     
-    // 验证角色表单
+    // 验证学生表单
     validateCharacterForm(formData) {
         // 检查必填字段
         if (!formData.name || isNaN(formData.costRecoveryRate) || isNaN(formData.skillCost)) {
@@ -1258,7 +1258,7 @@ class EventListeners {
         // 显示模态框
         this.modalManager.showModal('addRuleModal');
         
-        // 更新角色选择下拉框
+        // 更新学生选择下拉框
         this.updateRuleCharacterSelectors();
         
         // 添加规则类型切换事件监听器
@@ -1271,8 +1271,8 @@ class EventListeners {
             ruleTypeSelect.onchange = (e) => this.handleRuleTypeChange(e.target.value);
         }
         
-        // 自动读取选中的目标行，并设置触发角色
-        // 设置触发角色
+        // 自动读取选中的目标行，并设置触发学生
+        // 设置触发学生
         const ruleSourceCharacter = document.getElementById('ruleSourceCharacter');
         if (ruleSourceCharacter) {
             ruleSourceCharacter.value = selectedItem.characterId;
@@ -1312,20 +1312,20 @@ class EventListeners {
             }
         });
         
-        // 根据选择的规则类型显示/隐藏触发角色字段
+        // 根据选择的规则类型显示/隐藏触发学生字段
         const sourceCharacterContainer = document.getElementById('ruleSourceCharacterContainer');
         if (sourceCharacterContainer) {
-            // 减费效果和回费效果不需要触发角色
+            // 减费效果和回费效果不需要触发学生
             if (ruleType === 'costReduction' || ruleType === 'chargeIncrease') {
                 sourceCharacterContainer.classList.add('hidden');
-                // 禁用触发角色选择
+                // 禁用触发学生选择
                 const select = document.getElementById('ruleSourceCharacter');
                 if (select) {
                     select.disabled = true;
                 }
             } else {
                 sourceCharacterContainer.classList.remove('hidden');
-                // 启用触发角色选择
+                // 启用触发学生选择
                 const select = document.getElementById('ruleSourceCharacter');
                 if (select) {
                     select.disabled = false;
@@ -1375,14 +1375,14 @@ class EventListeners {
                             activationTimeInput.value = parseFloat(this.selectedRowTime).toFixed(2);
                         }
                     }
-                    // 生成角色多选选项
+                    // 生成学生多选选项
                     this.generateChargeIncreaseTargetOptions();
                 }
                 break;
         }
     }
     
-    // 更新规则表单中的角色选择器
+    // 更新规则表单中的学生选择器
     updateRuleCharacterSelectors() {
         const characters = this.dataManager.getCharacters();
         const selectors = [
@@ -1401,11 +1401,11 @@ class EventListeners {
                 } else {
                     const newEmptyOption = document.createElement('option');
                     newEmptyOption.value = '';
-                    newEmptyOption.textContent = '请选择角色';
+                    newEmptyOption.textContent = '请选择学生';
                     select.appendChild(newEmptyOption);
                 }
                 
-                // 添加角色选项
+                // 添加学生选项
                 characters.forEach(character => {
                     const option = document.createElement('option');
                     option.value = character.id;
@@ -1416,7 +1416,7 @@ class EventListeners {
         });
     }
     
-    // 生成回费效果的角色多选选项
+    // 生成回费效果的学生多选选项
     generateChargeIncreaseTargetOptions() {
         const characters = this.dataManager.getCharacters();
         const container = document.getElementById('ciTargetScopeContainer');
@@ -1435,12 +1435,12 @@ class EventListeners {
                 checkbox.value = character.id;
                 checkbox.className = 'mr-2 accent-blue-500';
                 
-                // 限制最多选择6个角色
+                // 限制最多选择6个学生
                 checkbox.addEventListener('change', () => {
                     const checkedCheckboxes = container.querySelectorAll('input[type="checkbox"]:checked');
                     if (checkedCheckboxes.length > 6) {
                         checkbox.checked = false;
-                        this.modalManager.showToast('最多可选择6个角色', 'warning');
+                        this.modalManager.showToast('最多可选择6个学生', 'warning');
                     }
                     
                     // 更新选中状态的样式
@@ -1500,7 +1500,7 @@ class EventListeners {
         const ruleSourceCharacterValue = document.getElementById('ruleSourceCharacter').value;
         const characterId = ruleSourceCharacterValue ? parseInt(ruleSourceCharacterValue) : 0;
         
-        console.log('规则类型:', ruleType, '触发角色ID:', characterId);
+        console.log('规则类型:', ruleType, '触发学生ID:', characterId);
         
         let ruleData;
         
@@ -1530,25 +1530,25 @@ class EventListeners {
                 
                 ruleData = {
                     type: 'costChange',
-                    characterId: this.currentTargetRowId, // 存储目标行的ID，而不是触发角色的ID
+                    characterId: this.currentTargetRowId, // 存储目标行的ID，而不是触发学生的ID
                     changeValue: changeValue
                 };
                 break;
             case 'chargeIncrease':
-                // 获取选中的角色
+                // 获取选中的学生
                 const container = document.getElementById('ciTargetScopeContainer');
                 const checkedCheckboxes = container.querySelectorAll('input[type="checkbox"]:checked');
                 const targetCharacterIds = Array.from(checkedCheckboxes).map(cb => parseInt(cb.value));
                 
-                // 检查是否至少选择了一个角色
+                // 检查是否至少选择了一个学生
                 if (targetCharacterIds.length === 0) {
-                    this.modalManager.showToast('请至少选择一个目标角色', 'error');
+                    this.modalManager.showToast('请至少选择一个目标学生', 'error');
                     return;
                 }
                 
                 ruleData = {
                     type: 'chargeIncrease',
-                    // 回费效果不需要触发角色
+                    // 回费效果不需要触发学生
                     characterId: null,
                     activationTime: parseFloat(document.getElementById('ciActivationTime').value) || 0,
                     duration: parseFloat(document.getElementById('ciDuration').value) || 0,
@@ -1601,7 +1601,7 @@ class EventListeners {
                 if (ciChargeType) console.log('ciChargeType:', ciChargeType.value);
                 if (ciValue) console.log('ciValue:', ciValue.value);
                 if (ciEffectType) console.log('ciEffectType:', ciEffectType.value);
-                // 直接获取选中的角色ID进行打印，避免变量作用域问题
+                // 直接获取选中的学生ID进行打印，避免变量作用域问题
                 const checkedBoxes = document.querySelectorAll('#ciTargetScopeContainer input[type="checkbox"]:checked');
                 const selectedCharacterIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
                 console.log('targetCharacterIds:', selectedCharacterIds);
@@ -1694,7 +1694,7 @@ class EventListeners {
             return false;
         }
         
-        // 对于需要触发角色的规则类型，验证characterId
+        // 对于需要触发学生的规则类型，验证characterId
         const needCharacterId = formData.type !== 'costReduction' && formData.type !== 'chargeIncrease';
         if (needCharacterId && (formData.characterId === null || formData.characterId === undefined || isNaN(parseInt(formData.characterId)))) {
             return false;
@@ -1726,7 +1726,7 @@ class EventListeners {
         if (this.app && !this.app.isDataTableInitialized()) {
             this.modalManager.showToast('请先初始化数据表', 'error');
         } else if (this.dataManager.characters.length === 0) {
-            this.modalManager.showToast('请先添加角色', 'error');
+            this.modalManager.showToast('请先添加学生', 'error');
         } else {
             // 读取页面中间表单的输入值
             const characterId = parseInt(document.getElementById('triggerCharacter').value);
@@ -1735,7 +1735,7 @@ class EventListeners {
             
             // 验证输入
             if (!characterId) {
-                this.modalManager.showToast('请选择触发角色', 'error');
+                this.modalManager.showToast('请选择触发学生', 'error');
                 return;
             }
             
@@ -1834,7 +1834,7 @@ class EventListeners {
             this.calculateTimeFromCost();
         };
         
-        // 角色变化时重新计算
+        // 学生变化时重新计算
         this.handleCharacterChange = () => {
             this.calculateCostFromTime();
         };
@@ -2336,7 +2336,7 @@ class EventListeners {
             exportOptions.classList.remove('hidden');
             importOptions.classList.add('hidden');
             
-            // 更新角色下拉菜单选项
+            // 更新学生下拉菜单选项
             this.updateCharacterSelectsInExportModal();
         } else {
             title.textContent = '导入数据';
@@ -2351,16 +2351,16 @@ class EventListeners {
         this.bindImportExportModalEvents();
     }
     
-    // 更新导出模态框中的角色下拉菜单选项
+    // 更新导出模态框中的学生下拉菜单选项
     updateCharacterSelectsInExportModal() {
-        // 获取所有角色名称
+        // 获取所有学生名称
         const characters = this.dataManager.getCharacters();
         const characterNames = characters.map(char => char.name);
         
         // 生成下拉选项HTML
-        const optionsHTML = `<option value="">请选择角色</option>${characterNames.map(name => `<option value="${name}">${name}</option>`).join('')}`;
+        const optionsHTML = `<option value="">请选择学生</option>${characterNames.map(name => `<option value="${name}">${name}</option>`).join('')}`;
         
-        // 更新所有角色站位下拉菜单
+        // 更新所有学生站位下拉菜单
         for (let i = 1; i <= 4; i++) {
             const select = document.getElementById(`position${i}`);
             if (select) {
@@ -2376,7 +2376,7 @@ class EventListeners {
             }
         }
         
-        // 添加角色站位唯一性检查
+        // 添加学生站位唯一性检查
         this.addPositionUniquenessCheck();
         
         // 添加初始技能唯一性检查
@@ -2386,25 +2386,25 @@ class EventListeners {
         this.addVideoAxisLinkParser();
     }
     
-    // 添加角色站位唯一性检查
+    // 添加学生站位唯一性检查
     addPositionUniquenessCheck() {
         const positionSelects = Array.from({length: 4}, (_, i) => document.getElementById(`position${i + 1}`)).filter(Boolean);
         
         const updatePositionOptions = () => {
-            // 获取所有已选择的角色
+            // 获取所有已选择的学生
             const selectedPositions = positionSelects.map(select => select.value).filter(Boolean);
             
             // 更新每个选择框的选项
             positionSelects.forEach(select => {
                 const currentValue = select.value;
-                // 获取所有角色名称
+                // 获取所有学生名称
                 const characters = this.dataManager.getCharacters();
                 const characterNames = characters.map(char => char.name);
                 
-                // 生成下拉选项HTML，排除其他选择框已选择的角色
-                let optionsHTML = '<option value="">请选择角色</option>';
+                // 生成下拉选项HTML，排除其他选择框已选择的学生
+                let optionsHTML = '<option value="">请选择学生</option>';
                 characterNames.forEach(name => {
-                    // 如果该角色已被其他选择框选中，且不是当前选择框的值，则禁用
+                    // 如果该学生已被其他选择框选中，且不是当前选择框的值，则禁用
                     const isSelectedElsewhere = selectedPositions.includes(name) && name !== currentValue;
                     optionsHTML += `<option value="${name}" ${isSelectedElsewhere ? 'disabled' : ''}>${name}${isSelectedElsewhere ? ' (已选择)' : ''}</option>`;
                 });
@@ -2426,20 +2426,20 @@ class EventListeners {
         const skillSelects = Array.from({length: 3}, (_, i) => document.getElementById(`initialSkill${i + 1}`)).filter(Boolean);
         
         const updateSkillOptions = () => {
-            // 获取所有已选择的角色
+            // 获取所有已选择的学生
             const selectedSkills = skillSelects.map(select => select.value).filter(Boolean);
             
             // 更新每个选择框的选项
             skillSelects.forEach(select => {
                 const currentValue = select.value;
-                // 获取所有角色名称
+                // 获取所有学生名称
                 const characters = this.dataManager.getCharacters();
                 const characterNames = characters.map(char => char.name);
                 
-                // 生成下拉选项HTML，排除其他选择框已选择的角色
-                let optionsHTML = '<option value="">请选择角色</option>';
+                // 生成下拉选项HTML，排除其他选择框已选择的学生
+                let optionsHTML = '<option value="">请选择学生</option>';
                 characterNames.forEach(name => {
-                    // 如果该角色已被其他选择框选中，且不是当前选择框的值，则禁用
+                    // 如果该学生已被其他选择框选中，且不是当前选择框的值，则禁用
                     const isSelectedElsewhere = selectedSkills.includes(name) && name !== currentValue;
                     optionsHTML += `<option value="${name}" ${isSelectedElsewhere ? 'disabled' : ''}>${name}${isSelectedElsewhere ? ' (已选择)' : ''}</option>`;
                 });
@@ -2540,7 +2540,7 @@ class EventListeners {
     
     // 保存用户输入的导出信息
     saveExportInfo() {
-        // 获取角色站位信息
+        // 获取学生站位信息
         const positions = [];
         for (let i = 1; i <= 4; i++) {
             const select = document.getElementById(`position${i}`);
@@ -2864,7 +2864,7 @@ class EventListeners {
         const characters = this.dataManager.getCharacters();
         
         if (characters.length === 0) {
-            this.modalManager.showToast('请先添加角色', 'error');
+            this.modalManager.showToast('请先添加学生', 'error');
             return;
         }
         

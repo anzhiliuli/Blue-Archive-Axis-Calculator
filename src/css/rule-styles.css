@@ -1,4 +1,4 @@
-/* 角色关联设置区域样式 */
+/* 学生关联设置区域样式 */
 #rulesTable {
     display: block;
     overflow-y: auto;
@@ -129,7 +129,7 @@
     color: #cbd5e1;
 }
 
-/* 角色关联设置标题样式 */
+/* 学生关联设置标题样式 */
 .bg-gradient-to-r.from-blue-50.to-indigo-50 {
     background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
     padding: 8px 12px;
@@ -160,7 +160,7 @@
     transform: translateY(-1px);
 }
 
-/* 角色关联设置容器样式 */
+/* 学生关联设置容器样式 */
 .bg-white.rounded-xl.shadow-sm.border.border-gray-100 {
     border: 1px solid #e2e8f0;
     border-radius: 8px;

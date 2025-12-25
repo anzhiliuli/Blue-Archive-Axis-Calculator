@@ -14,11 +14,11 @@ class UIRenderer {
 
 
 
-    // 渲染角色列表
+    // 渲染学生列表
     renderCharacterList() {
         const characters = this.dataManager.getCharacters();
         
-        // 使用数据表格组件渲染角色列表
+        // 使用数据表格组件渲染学生列表
         if (this.app.tables.characters) {
             this.app.tables.characters.setData(characters);
         } else {
@@ -30,9 +30,9 @@ class UIRenderer {
                 characterList.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-4 text-muted">
-                            暂无角色数据
+                            暂无学生数据
                             <button id="add-character-btn" class="btn btn-primary btn-sm ml-2">
-                                <i class="fas fa-plus"></i> 添加角色
+                                <i class="fas fa-plus"></i> 添加学生
                             </button>
                         </td>
                     </tr>
@@ -97,10 +97,10 @@ class UIRenderer {
         } else {
             let cardsHTML = '';
             rules.forEach(rule => {
-                // 处理触发角色（减费效果和回费效果不需要触发角色）
+                // 处理触发学生（减费效果和回费效果不需要触发学生）
                 let sourceCharacterText = '';
                 if (rule.characterId) {
-                    sourceCharacterText = characters.find(c => c.id === rule.characterId)?.name || '未知角色';
+                   const sourceCharacterText = characters.find(c => c.id === rule.characterId)?.name || '未知学生';
                 }
                 
                 // 根据规则类型生成显示内容
@@ -112,14 +112,14 @@ class UIRenderer {
                 switch(rule.type) {
                     case 'costReduction':
                         ruleTypeText = '减费效果';
-                        // 处理目标角色（使用统一的targetCharacterIds数组）
+                        // 处理目标学生（使用统一的targetCharacterIds数组）
                         if (Array.isArray(rule.targetCharacterIds)) {
                             const targetNames = rule.targetCharacterIds
-                                .map(id => characters.find(c => c.id === id)?.name || '未知角色')
+                                .map(id => characters.find(c => c.id === id)?.name || '未知学生')
                                 .join(', ');
                             targetText = targetNames;
                         } else {
-                            targetText = '未知角色';
+                            targetText = '未知学生';
                         }
                         // 查找对应的触发行数据
                         const crDataItems = this.dataManager.getDataItems();
@@ -146,29 +146,29 @@ class UIRenderer {
                         const triggerItem = dataItems.find(item => item.id === rule.characterId);
                         triggerTime = triggerItem ? this.formatTime(triggerItem.time) : '未知时间';
                         
-                        // 从触发行数据中获取触发角色名称
+                        // 从触发行数据中获取触发学生名称
                         let triggerCharacterText = '';
                         if (triggerItem) {
                             const triggerCharacter = characters.find(c => c.id === triggerItem.characterId);
-                            triggerCharacterText = triggerCharacter ? triggerCharacter.name : '未知角色';
+                            triggerCharacterText = triggerCharacter ? triggerCharacter.name : '未知学生';
                         }
                         
                         paramsHTML = `
                             <div class="mb-1"><strong>触发时间:</strong> ${triggerTime}</div>
-                            <div class="mb-1"><strong>触发角色:</strong> ${triggerCharacterText}</div>
+                            <div class="mb-1"><strong>触发学生:</strong> ${triggerCharacterText}</div>
                             <div class="mb-1"><strong>更改数值:</strong> ${rule.changeValue}</div>
                         `;
                         break;
                     case 'chargeIncrease':
                         ruleTypeText = '费用效果';
-                        // 处理目标角色（多选）
+                        // 处理目标学生（多选）
                         if (Array.isArray(rule.targetCharacterIds)) {
                             const targetNames = rule.targetCharacterIds
-                                .map(id => characters.find(c => c.id === id)?.name || '未知角色')
+                                .map(id => characters.find(c => c.id === id)?.name || '未知学生')
                                 .join(', ');
                             targetText = targetNames;
                         } else {
-                            targetText = '未知角色';
+                            targetText = '未知学生';
                         }
                         
                         // 处理效果类型（增加/减少）
@@ -198,10 +198,10 @@ class UIRenderer {
                                     ${rule.type === 'costChange' ? 
                                             `<strong>触发时间:</strong> ${triggerTime}` : 
                                             rule.type === 'costReduction' ?
-                                            `<strong>触发时间:</strong> ${triggerTime} | <strong>目标角色:</strong> ${targetText}` : 
+                                            `<strong>触发时间:</strong> ${triggerTime} | <strong>目标学生:</strong> ${targetText}` : 
                                             rule.type === 'chargeIncrease' ?
                                             `<strong>作用范围:</strong> ${targetText}` :
-                                            `<strong>触发角色:</strong> ${sourceCharacterText || '-'} | <strong>目标角色:</strong> ${targetText}`
+                                            `<strong>触发学生:</strong> ${sourceCharacterText || '-'} | <strong>目标学生:</strong> ${targetText}`
                                         }
                                 </p>
                             </div>
@@ -275,7 +275,7 @@ class UIRenderer {
                 
                 // 为回费类型的特殊行应用特殊样式
                 if (item.action === '回费') {
-                    const character = characters.find(c => c.id === item.characterId)?.name || '未知角色';
+                    const character = characters.find(c => c.id === item.characterId)?.name || '未知学生';
                     const costChange = item.costDeduction > 0 ? '-' : '';
                     
                     return `
@@ -300,7 +300,7 @@ class UIRenderer {
                 }
                 
                 // 普通数据项的渲染
-                const character = characters.find(c => c.id === item.characterId)?.name || '未知角色';
+                const character = characters.find(c => c.id === item.characterId)?.name || '未知学生';
                 const costChange = item.costDeduction > 0 ? '-' : '';
                 
                 return `
@@ -404,7 +404,7 @@ class UIRenderer {
     updateStatusInfo() {
         // 更新初始化状态（已在app.js中实现）
         
-        // 更新角色数量
+        // 更新学生数量
         const characterCountElement = document.getElementById('characterCount');
         if (characterCountElement) {
             const characters = this.dataManager.getCharacters();
@@ -450,7 +450,7 @@ class UIRenderer {
             
             statusInfo.innerHTML = `
                 <div class="status-item">
-                    <span class="status-label">角色数量:</span>
+                    <span class="status-label">学生数量:</span>
                     <span class="status-value">${characters.length}</span>
                 </div>
                 <div class="status-item">
@@ -470,7 +470,7 @@ class UIRenderer {
     }
 
 
-    // 更新角色选择下拉框
+    // 更新学生选择下拉框
     updateCharacterSelects() {
         const characterSelects = document.querySelectorAll('.character-select');
         if (!characterSelects.length) return;
@@ -482,7 +482,7 @@ class UIRenderer {
             const currentValue = select.value;
             
             // 清空并重新添加选项
-            select.innerHTML = '<option value="">选择角色</option>';
+            select.innerHTML = '<option value="">选择学生</option>';
             characters.forEach(character => {
                 const option = document.createElement('option');
                 option.value = character.id;
@@ -514,7 +514,7 @@ class UIRenderer {
         // 查找所有action为"回费"或"减费"的数据项，这些是已应用的特殊技能
         const appliedSkills = dataItems.filter(item => item.action === '回费' || item.action === '减费');
         
-        // 获取角色列表
+        // 获取学生列表
         const characters = this.dataManager.getCharacters();
         
         // 预设技能描述映射
@@ -525,7 +525,7 @@ class UIRenderer {
             },
             '水白': {
                 skill: '开局buff',
-                description: '开局入场后持续一分钟对友方增加暴击值buff和除水白外所有角色减少1c技能费用'
+                description: '开局入场后持续一分钟对友方增加暴击值buff和除水白外所有学生减少1c技能费用'
             }
         };
         
@@ -571,7 +571,7 @@ class UIRenderer {
         statusBarContent.innerHTML = statusItemsHTML;
     }
     
-    // 渲染角色特殊技能卡片
+    // 渲染学生特殊技能卡片
     renderSpecialSkills() {
         const container = document.getElementById('specialSkillsContainer');
         if (!container) return;
@@ -579,7 +579,7 @@ class UIRenderer {
         // 更新状态栏
         this.updateStatusBar();
         
-        // 获取角色列表
+        // 获取学生列表
         const characters = this.dataManager.getCharacters();
         
         // 预设技能数据
@@ -594,7 +594,7 @@ class UIRenderer {
                 id: '2',
                 name: '水白',
                 skill: '开局buff',
-                description: '开局入场后持续一分钟对友方增加暴击值buff和除水白外所有角色减少1c技能费用'
+                description: '开局入场后持续一分钟对友方增加暴击值buff和除水白外所有学生减少1c技能费用'
             }
         ];
         
@@ -606,7 +606,7 @@ class UIRenderer {
             const card = document.createElement('div');
             card.className = 'skill-card';
             card.dataset.skillId = skill.id;
-            // 根据角色名或ID设置标签
+            // 根据学生名或ID设置标签
             let primaryTag = '特殊技能';
             if (skill.name === '瞬' || skill.id === '1') {
                 primaryTag = '回费技能';
@@ -642,10 +642,10 @@ class UIRenderer {
                 // 防止冒泡影响按钮点击
                 if (e.target.closest('.skill-card-confirm-btn')) return;
                 
-                // 检查角色是否存在
+                // 检查学生是否存在
                 const characterExists = characters.some(c => c.name === skill.name);
                 if (!characterExists) {
-                    this.app.modalManager.showToast(`角色列表中不存在${skill.name}，无法选择该技能`, 'error');
+                    this.app.modalManager.showToast(`学生列表中不存在${skill.name}，无法选择该技能`, 'error');
                     return;
                 }
                 
@@ -753,12 +753,12 @@ class UIRenderer {
                     }, 1000);
                     
                     // 在数据表中添加特殊行
-                    // 获取当前卡片的角色信息
+                    // 获取当前卡片的学生信息
                     const character = characters.find(c => c.name === skill.name);
                     if (character) {
                         // 创建特殊数据项
                         let action = '特殊技能'; // 默认动作
-                        // 根据角色设置不同的动作
+                        // 根据学生设置不同的动作
                         if (skill.name === '瞬' || skill.id === '1') {
                             action = '回费'; // 瞬卡片的动作为回费
                         } else if (skill.name === '水白' || skill.id === '2') {
@@ -768,7 +768,7 @@ class UIRenderer {
                         const specialItem = {
                             id: `special_${Date.now()}`,
                             characterId: character.id,
-                            action: action, // 根据角色设置不同的动作
+                            action: action, // 根据学生设置不同的动作
                             time: seconds,
                             cost: 0, // 触发费用根据入场时间自动计算，这里先设为0，后续会被calculator重新计算
                             timeInterval: 0, // 时间间隔会被calculator重新计算
@@ -837,7 +837,7 @@ class UIRenderer {
      * 初始化时间轴视图
      */
     initTimelineView() {
-        // 获取数据项和角色
+        // 获取数据项和学生
         const items = this.dataManager.getDataItems();
         const characters = this.dataManager.getCharacters();
         
@@ -896,7 +896,7 @@ class UIRenderer {
     /**
      * 渲染时间轴事件卡片
      * @param {Array} items - 数据项数组
-     * @param {Array} characters - 角色数组
+     * @param {Array} characters - 学生数组
      */
     renderTimelineEvents(items, characters) {
         const timelineEventsContainer = document.getElementById('timelineEvents');
@@ -935,7 +935,7 @@ class UIRenderer {
         // 渲染时间轴卡片
         const timelineCardsHTML = sortedItems.map((item, index) => {
             // 为所有属性添加默认值，防止访问不存在的属性
-            const character = characters.find(c => c.id === item.characterId)?.name || '未知角色';
+            const character = characters.find(c => c.id === item.characterId)?.name || '未知学生';
             const action = item.action || '未知动作';
             const time = typeof item.time === 'number' ? item.time : 0;
             const cost = typeof item.cost === 'number' ? item.cost : 0;
@@ -1211,13 +1211,13 @@ class UIRenderer {
         
         let infoHTML = '';
         
-        // 检查是否有角色站位信息需要显示
+        // 检查是否有学生站位信息需要显示
         const hasPositions = exportInfo.positions.some(pos => pos);
         
         // 检查是否有初始技能信息需要显示
         const hasInitialSkills = exportInfo.initialSkills.some(skill => skill);
         
-        // 渲染角色站位信息（仅显示名字，取消编号）
+        // 渲染学生站位信息（仅显示名字，取消编号）
         if (hasPositions) {
             let positionsHTML = exportInfo.positions
                 .filter(pos => pos) // 只保留有值的站位
@@ -1264,7 +1264,7 @@ class UIRenderer {
     /**
      * 初始化时间轴交互功能
      * @param {Array} items - 数据项数组
-     * @param {Array} characters - 角色数组
+     * @param {Array} characters - 学生数组
      */
     initTimelineInteractions(items, characters) {
         // 图表类型切换功能

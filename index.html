@@ -138,7 +138,7 @@
             margin-top: 1.5rem !important;
         }
         
-        /* 角色预设弹窗玻璃态效果 */
+        /* 学生预设弹窗玻璃态效果 */
         #characterPresetsModal .modal-content {
             /* 玻璃态核心样式 - 优化后 */
             background: rgba(249, 250, 251, 0.7) !important;
@@ -234,7 +234,7 @@
                         <ul id="toolsMenu" class="menu-dropdown absolute right-0 mt-2 list-none p-0 m-0" role="menu" aria-labelledby="toolsMenuBtn">
                             <li role="none">
                                 <button id="characterPresets" class="menu-dropdown-item" role="menuitem">
-                                    <i class="fas fa-star"></i>角色预设
+                                    <i class="fas fa-star"></i>学生预设
                                 </button>
                             </li>
                             <li role="none">
@@ -275,12 +275,12 @@
 
     <!-- 主要内容区域 -->
     <main class="main-content container mx-auto px-4 sm:px-6 py-6">
-        <!-- 左侧角色属性面板 -->
+        <!-- 左侧学生属性面板 -->
         <section class="panel left-panel bg-white rounded-xl shadow-lg border border-gray-100 p-6 flex flex-col">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xl font-semibold flex items-center gap-2 text-gray-800">
                     <i class="fas fa-users text-primary"></i>
-                    角色属性
+                    学生属性
                 </h2>
                 <div class="flex gap-3">
                     <button id="add-character-btn" class="btn-primary py-2 px-4 rounded-lg hover:shadow-md transition-all">
@@ -291,10 +291,10 @@
                 </div>
             </div>
             
-            <!-- 角色列表 -->
+            <!-- 学生列表 -->
             <div class="flex-grow overflow-auto mb-4">
                 <table id="charactersTable" class="w-full">
-                    <!-- 角色列表将通过JavaScript动态生成 -->
+                    <!-- 学生列表将通过JavaScript动态生成 -->
                 </table>
             </div>
             
@@ -304,10 +304,10 @@
                 持续回费功能
             </button>
             
-            <!-- 角色特殊技能按钮 -->
+            <!-- 学生特殊技能按钮 -->
             <button id="specialSkillsBtn" class="btn-primary w-full mb-3">
                 <i class="fas fa-star"></i>
-                角色特殊技能
+                学生特殊技能
             </button>
             <!-- 使用手册按钮 -->
             <button id="manualBtn" class="btn-outline w-full">
@@ -346,10 +346,10 @@
                 <div id="addItemContent" class="bg-gray-50 rounded-lg p-4 mt-1">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
-                            <label class="block text-sm font-medium mb-1">触发角色</label>
+                            <label class="block text-sm font-medium mb-1">触发学生</label>
                             <select id="triggerCharacter" class="input-field w-full character-select">
-                                <option value="">请选择角色</option>
-                                <!-- 角色选项将通过JavaScript动态生成 -->
+                                <option value="">请选择学生</option>
+                                <!-- 学生选项将通过JavaScript动态生成 -->
                             </select>
                         </div>
                         <div>
@@ -374,20 +374,20 @@
                 </div>
             </div>
             
-            <!-- 角色关联设置区 -->
+            <!-- 学生关联设置区 -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-2">
                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-2 border-b border-gray-100">
                     <div class="flex items-center justify-between">
                         <h3 class="section-title text-blue-800 flex items-center">
                             <i class="fas fa-link mr-1"></i>
-                            角色关联设置
+                            学生关联设置
                         </h3>
                         <button id="add-rule-btn" class="btn-primary py-1 px-3 rounded-lg hover:shadow-md transition-all duration-200">
                             <i class="fas fa-plus mr-1"></i>
                             <span>添加规则</span>
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 mt-0.5">设置角色间的关联规则，影响费用计算和回费效果</p>
+                    <p class="text-xs text-gray-500 mt-0.5">设置学生间的关联规则，影响费用计算和回费效果</p>
                 </div>
                 <div id="rulesTable" class="p-2 overflow-y-auto bg-white"></div>
             </div>
@@ -407,10 +407,10 @@
                 <div id="filterContent" class="bg-gray-50 rounded-lg p-2 mt-1 hidden">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                         <div>
-                            <label class="block text-xs font-medium mb-1">按角色筛选</label>
+                            <label class="block text-xs font-medium mb-1">按学生筛选</label>
                             <select id="filterCharacter" class="input-field w-full character-select text-sm">
-                                <option value="">全部角色</option>
-                                <!-- 角色选项将通过JavaScript动态生成 -->
+                                <option value="">全部学生</option>
+                                <!-- 学生选项将通过JavaScript动态生成 -->
                             </select>
                         </div>
                         <div>
@@ -443,7 +443,7 @@
                         <button id="toggleSpecialRowsBtn" class="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 transition-colors duration-200">
                             <i class="fas fa-eye-slash"></i> 隐藏特殊行
                         </button>
-                        <!-- 角色站位信息 -->
+                        <!-- 学生站位信息 -->
                         <span id="positionsInfo" class="text-sm text-gray-600"></span>
                     </div>
                     <!-- 视频轴按钮 -->
@@ -497,7 +497,7 @@
                         <span id="initStatus" class="font-medium text-danger">未初始化</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-600">角色数量:</span>
+                        <span class="text-gray-600">学生数量:</span>
                         <span id="characterCount" class="font-medium">0/6</span>
                     </div>
                     <div class="flex justify-between">
@@ -536,32 +536,32 @@
                             <div id="exportConfigInfo" class="bg-gray-50 p-4 rounded-lg mb-4 hidden">
                                 <h6 class="font-medium mb-3">配置导出信息（非必填）</h6>
                                 
-                                <!-- 角色站位 -->
+                                <!-- 学生站位 -->
                                 <div class="mb-3">
-                                    <label class="block text-sm font-medium mb-2">角色站位</label>
+                                    <label class="block text-sm font-medium mb-2">学生站位</label>
                                     <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                         <div>
                                             <label class="block text-xs text-gray-600 mb-1">站位1</label>
                                             <select id="position1" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="">请选择角色</option>
+                                                <option value="">请选择学生</option>
                                             </select>
                                         </div>
                                         <div>
                                             <label class="block text-xs text-gray-600 mb-1">站位2</label>
                                             <select id="position2" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="">请选择角色</option>
+                                                <option value="">请选择学生</option>
                                             </select>
                                         </div>
                                         <div>
                                             <label class="block text-xs text-gray-600 mb-1">站位3</label>
                                             <select id="position3" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="">请选择角色</option>
+                                                <option value="">请选择学生</option>
                                             </select>
                                         </div>
                                         <div>
                                             <label class="block text-xs text-gray-600 mb-1">站位4</label>
                                             <select id="position4" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="">请选择角色</option>
+                                                <option value="">请选择学生</option>
                                             </select>
                                         </div>
                                     </div>
@@ -574,19 +574,19 @@
                                         <div>
                                             <label class="block text-xs text-gray-600 mb-1">技能1</label>
                                             <select id="initialSkill1" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="">请选择角色</option>
+                                                <option value="">请选择学生</option>
                                             </select>
                                         </div>
                                         <div>
                                             <label class="block text-xs text-gray-600 mb-1">技能2</label>
                                             <select id="initialSkill2" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="">请选择角色</option>
+                                                <option value="">请选择学生</option>
                                             </select>
                                         </div>
                                         <div>
                                             <label class="block text-xs text-gray-600 mb-1">技能3</label>
                                             <select id="initialSkill3" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                                <option value="">请选择角色</option>
+                                                <option value="">请选择学生</option>
                                             </select>
                                         </div>
                                     </div>
@@ -659,11 +659,11 @@
 
 
     <!-- 弹窗组件 -->
-    <!-- 角色预设弹窗 -->
+    <!-- 学生预设弹窗 -->
     <div id="characterPresetsModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-backdrop">
         <div class="modal-content max-w-lg">
             <div class="modal-header">
-                <h3 class="text-lg font-semibold">角色预设</h3>
+                <h3 class="text-lg font-semibold">学生预设</h3>
                 <button class="closeModal text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
@@ -671,13 +671,13 @@
             <div class="modal-body">
                 <div class="space-y-4">
                     <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-medium">预设角色列表</h4>
+                        <h4 class="font-medium">预设学生列表</h4>
                         <div class="text-sm text-gray-500">
                             已添加: <span id="presetCount">0</span>/6
                         </div>
                     </div>
                     <div id="presetsList" class="space-y-3 max-h-60 overflow-y-auto">
-                        <!-- 预设角色将通过JavaScript动态生成 -->
+                        <!-- 预设学生将通过JavaScript动态生成 -->
                     </div>
                 </div>
             </div>
@@ -685,11 +685,11 @@
         </div>
     </div>
 
-    <!-- 添加角色弹窗 -->
+    <!-- 添加学生弹窗 -->
     <div id="addCharacterModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-backdrop">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="text-lg font-semibold">添加角色</h3>
+                <h3 class="text-lg font-semibold">添加学生</h3>
                 <button class="closeModal text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
@@ -697,12 +697,13 @@
             <div class="modal-body">
                 <form id="addCharacterForm" class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium mb-1">角色名</label>
+                        <label class="block text-sm font-medium mb-1">学生名</label>
                         <input type="text" id="characterName" class="input-field w-full" required>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">回费速度 (c/s)</label>
                         <input type="number" id="characterChargeSpeed" class="input-field w-full" min="0" step="0.01" required>
+                        <p class="text-xs text-gray-500 mt-1">提示：回费速度一般默认为0.07</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">技能费用 (c)</label>
@@ -727,11 +728,11 @@
         </div>
     </div>
 
-    <!-- 编辑角色弹窗 -->
+    <!-- 编辑学生弹窗 -->
     <div id="editCharacterModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-backdrop">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="text-lg font-semibold">编辑角色</h3>
+                <h3 class="text-lg font-semibold">编辑学生</h3>
                 <button class="closeModal text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times"></i>
                 </button>
@@ -740,12 +741,13 @@
                 <form id="editCharacterForm" class="space-y-4">
                     <input type="hidden" id="edit-character-id">
                     <div>
-                        <label class="block text-sm font-medium mb-1">角色名</label>
+                        <label class="block text-sm font-medium mb-1">学生名</label>
                         <input type="text" id="edit-character-name" class="input-field w-full" required>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">回费速度 (c/s)</label>
                         <input type="number" id="edit-character-cost-recovery-rate" class="input-field w-full" min="0" step="0.01" required>
+                        <p class="text-xs text-gray-500 mt-1">提示：回费速度一般默认为0.07</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">技能费用 (c)</label>
@@ -795,20 +797,20 @@
                     </div>
                     <!-- 通用字段 -->
                     <div id="ruleSourceCharacterContainer" class="hidden">
-                        <label class="block text-sm font-medium mb-1">触发角色</label>
+                        <label class="block text-sm font-medium mb-1">触发学生</label>
                         <select id="ruleSourceCharacter" name="ruleSourceCharacter" class="input-field w-full">
-                            <option value="">请选择角色</option>
-                            <!-- 角色选项将通过JavaScript动态生成 -->
+                            <option value="">请选择学生</option>
+                            <!-- 学生选项将通过JavaScript动态生成 -->
                         </select>
                     </div>
                     
                     <!-- 减费效果字段 -->
                     <div id="costReductionFields" class="hidden">
                         <div class="mb-4">
-                            <label class="block text-sm font-medium mb-1">目标角色</label>
+                            <label class="block text-sm font-medium mb-1">目标学生</label>
                             <select id="crTargetCharacter" name="crTargetCharacter" class="input-field w-full">
-                                <option value="">请选择角色</option>
-                                <!-- 角色选项将通过JavaScript动态生成 -->
+                                <option value="">请选择学生</option>
+                                <!-- 学生选项将通过JavaScript动态生成 -->
                             </select>
                         </div>
                         <div class="mb-4">
@@ -864,7 +866,7 @@
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">作用范围</label>
                             <div id="ciTargetScopeContainer" class="grid grid-cols-2 gap-2">
-                                <!-- 角色多选选项将通过JavaScript动态生成 -->
+                                <!-- 学生多选选项将通过JavaScript动态生成 -->
                             </div>
                         </div>
                     </div>
@@ -893,10 +895,10 @@
                 <form id="editDataItemForm" class="space-y-4">
                     <input type="hidden" id="editDataItemId">
                     <div>
-                        <label class="block text-sm font-medium mb-1">触发角色</label>
+                        <label class="block text-sm font-medium mb-1">触发学生</label>
                         <select id="editTriggerCharacter" class="input-field w-full character-select" required>
-                            <option value="">请选择角色</option>
-                            <!-- 角色选项将通过JavaScript动态生成 -->
+                            <option value="">请选择学生</option>
+                            <!-- 学生选项将通过JavaScript动态生成 -->
                         </select>
                     </div>
                     <div>
@@ -1389,50 +1391,36 @@
                                     <li class="flex gap-4">
                                         <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-medium text-sm shadow-sm">1</div>
                                         <div class="flex-1">
-                                            <h3 class="font-semibold text-gray-900 mb-1">添加角色</h3>
-                                            <p class="text-gray-600">点击"添加角色"按钮，设置角色名、回费速度、技能费用等属性</p>
+                                            <h3 class="font-semibold text-gray-900 mb-1">添加学生</h3>
+                                            <p class="text-gray-600">点击左侧面板的"添加学生"按钮，设置学生基本属性</p>
                                         </div>
                                     </li>
                                     <li class="flex gap-4">
                                         <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-medium text-sm shadow-sm">2</div>
                                         <div class="flex-1">
                                             <h3 class="font-semibold text-gray-900 mb-1">初始化数据表</h3>
-                                            <p class="text-gray-600">点击"初始化"按钮，设置初始时间（如2:59.000）。<strong>初始时间代表开始回费的时间，而不是场景最开始的时间</strong></p>
+                                            <p class="text-gray-600">点击右侧面板的"初始化"按钮，设置初始时间</p>
                                         </div>
                                     </li>
                                     <li class="flex gap-4">
                                         <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-medium text-sm shadow-sm">3</div>
                                         <div class="flex-1">
                                             <h3 class="font-semibold text-gray-900 mb-1">添加数据项</h3>
-                                            <p class="text-gray-600">在中间表单选择触发角色、输入触发费用、动作，点击"添加数据项"</p>
+                                            <p class="text-gray-600">在中间面板填写触发学生、触发费用和动作，点击"添加数据项"</p>
                                         </div>
                                     </li>
                                     <li class="flex gap-4">
                                         <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-medium text-sm shadow-sm">4</div>
                                         <div class="flex-1">
-                                            <h3 class="font-semibold text-gray-900 mb-1">编辑数据项</h3>
-                                            <p class="text-gray-600">点击数据项后的编辑按钮，可调整时间或费用，系统会自动计算关联数据</p>
+                                            <h3 class="font-semibold text-gray-900 mb-1">调整数据项</h3>
+                                            <p class="text-gray-600">点击数据项后的编辑按钮，调整时间或费用，系统会自动计算关联数据</p>
                                         </div>
                                     </li>
                                     <li class="flex gap-4">
                                         <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-medium text-sm shadow-sm">5</div>
                                         <div class="flex-1">
-                                            <h3 class="font-semibold text-gray-900 mb-1">设置关联规则</h3>
-                                            <p class="text-gray-600">选择目标行后，点击"添加关联规则"，设置角色间的相互影响</p>
-                                        </div>
-                                    </li>
-                                    <li class="flex gap-4">
-                                        <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-medium text-sm shadow-sm">6</div>
-                                        <div class="flex-1">
-                                            <h3 class="font-semibold text-gray-900 mb-1">使用撤销/重做</h3>
-                                            <p class="text-gray-600">点击"撤销"按钮可以回退上一步操作，点击"重做"按钮可以恢复已撤销的操作</p>
-                                        </div>
-                                    </li>
-                                    <li class="flex gap-4">
-                                        <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-medium text-sm shadow-sm">7</div>
-                                        <div class="flex-1">
-                                            <h3 class="font-semibold text-gray-900 mb-1">复制最后一项</h3>
-                                            <p class="text-gray-600">点击"复制最后一项"按钮可以快速复制最后一条数据项，系统会自动更新时间</p>
+                                            <h3 class="font-semibold text-gray-900 mb-1">导出数据</h3>
+                                            <p class="text-gray-600">点击右侧面板的"导出数据文件"按钮，配置导出信息并导出数据</p>
                                         </div>
                                     </li>
                                 </ol>
@@ -1449,32 +1437,32 @@
                                 <div class="h-1 w-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mt-2"></div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- 角色管理 -->
+                                <!-- 学生管理 -->
                                 <div class="feature-card bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
                                     <div class="feature-icon w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 shadow-sm">
                                         <i class="fas fa-users text-2xl"></i>
                                     </div>
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-3">角色管理</h3>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-3">学生管理</h3>
                                     <ul class="space-y-2">
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span>添加、编辑、删除角色（最多6个）</span>
+                                            <span>添加、编辑、删除学生（最多6个）</span>
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span>设置角色回费速度、技能费用</span>
+                                            <span>设置学生回费速度、技能费用</span>
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span>启用回费：配置回费增加百分比，该百分比会应用到所有角色的回费计算</span>
+                                            <span>启用回费：配置回费增加百分比，该百分比会应用到所有学生的回费计算</span>
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span>最多只有一个角色可以启用回费功能</span>
+                                            <span>最多只有一个学生可以启用回费功能</span>
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span>角色预设：内置12个预设角色，可快速添加常用角色</span>
+                                            <span>学生预设：内置12个预设学生，可快速添加常用学生</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -1525,9 +1513,9 @@
                                     <ul class="space-y-3">
                                         <li class="p-3 bg-green-50 rounded-lg border border-green-100">
                                             <h4 class="font-medium text-green-800 mb-1">减费效果</h4>
-                                            <p class="text-sm text-gray-700">降低目标角色的技能费用</p>
+                                            <p class="text-sm text-gray-700">降低目标学生的技能费用</p>
                                             <div class="mt-2 space-y-1 text-xs text-gray-600">
-                                                <div><strong>设置项</strong>：触发角色、目标角色、生效次数、减费数值</div>
+                                                <div><strong>设置项</strong>：触发学生、目标学生、生效次数、减费数值</div>
                                                 <div><strong>注意</strong>：后添加的减费规则优先级更高，会覆盖之前的减费效果</div>
                                             </div>
                                         </li>
@@ -1535,7 +1523,7 @@
                                             <h4 class="font-medium text-green-800 mb-1">更改扣除</h4>
                                             <p class="text-sm text-gray-700">直接修改目标行的费用扣除值</p>
                                             <div class="mt-2 space-y-1 text-xs text-gray-600">
-                                                <div><strong>设置项</strong>：触发角色、更改数值</div>
+                                                <div><strong>设置项</strong>：触发学生、更改数值</div>
                                                 <div><strong>注意</strong>：该规则仅对目标行生效，会覆盖所有其他费用计算</div>
                                             </div>
                                         </li>
@@ -1543,8 +1531,8 @@
                                             <h4 class="font-medium text-green-800 mb-1">费用效果</h4>
                                             <p class="text-sm text-gray-700">增加或减少回费速度</p>
                                             <div class="mt-2 space-y-1 text-xs text-gray-600">
-                                                <div><strong>设置项</strong>：触发角色、目标角色、生效时间、持续时间、费用类型、数值</div>
-                                                <div><strong>注意</strong>：费用效果在指定时间范围内生效，会影响所有符合条件的角色</div>
+                                                <div><strong>设置项</strong>：触发学生、目标学生、生效时间、持续时间、费用类型、数值</div>
+                                                <div><strong>注意</strong>：费用效果在指定时间范围内生效，会影响所有符合条件的学生</div>
                                             </div>
                                         </li>
                                     </ul>
@@ -1573,7 +1561,7 @@
                                                 </div>
                                                 <div class="flex items-start gap-2">
                                                     <i class="fas fa-arrow-up text-yellow-600 mt-1"></i>
-                                                    <span><strong>回费速度增加</strong>：回费速度的增加量（c/s），应用于目标角色</span>
+                                                    <span><strong>回费速度增加</strong>：回费速度的增加量（c/s），应用于目标学生</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -1590,7 +1578,7 @@
                                                 </li>
                                                 <li class="flex items-start gap-2">
                                                     <i class="fas fa-check text-blue-600 mt-1"></i>
-                                                    <span>期间目标角色的回费速度增加 指定数值</span>
+                                                    <span>期间目标学生的回费速度增加 指定数值</span>
                                                 </li>
                                                 <li class="flex items-start gap-2">
                                                     <i class="fas fa-check text-blue-600 mt-1"></i>
@@ -1601,19 +1589,19 @@
                                     </div>
                                 </div>
                                 
-                                <!-- 角色特殊技能 -->
+                                <!-- 学生特殊技能 -->
                                 <div class="feature-card bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
                                     <div class="feature-icon w-12 h-12 bg-pink-100 text-pink-600 rounded-xl flex items-center justify-center mb-4">
                                         <i class="fas fa-star text-2xl"></i>
                                     </div>
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-3">角色特殊技能</h3>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-3">学生特殊技能</h3>
                                     <div class="mb-3 text-sm text-gray-600">
-                                        <strong>使用步骤</strong>：点击"角色特殊技能" → 设置技能 → 保存
+                                        <strong>使用步骤</strong>：点击"学生特殊技能" → 设置技能 → 保存
                                     </div>
                                     <ul class="space-y-2">
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span>设置和计算角色的特殊技能费用</span>
+                                            <span>设置和计算学生的特殊技能费用</span>
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
@@ -1621,7 +1609,7 @@
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span>支持不同角色的特殊技能费用计算</span>
+                                            <span>支持不同学生的特殊技能费用计算</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -1655,6 +1643,14 @@
                                             <i class="fas fa-check text-green-500 mt-1"></i>
                                             <span>支持全屏模态框显示，带有玻璃态效果</span>
                                         </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>数据表上方显示导出信息，包括学生站位和初始技能</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>站位信息和初始技能分行显示区分清晰</span>
+                                        </li>
                                     </ul>
                                 </div>
                                 
@@ -1676,6 +1672,52 @@
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
                                             <span>清空筛选条件，恢复显示所有数据项</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- 导出界面 -->
+                                <div class="feature-card bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                    <div class="feature-icon w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-4">
+                                        <i class="fas fa-download text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-3">导出界面</h3>
+                                    <ul class="space-y-2">
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>横向布局：导出按钮采用横向排列，更加紧凑美观</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>导出更多信息：点击按钮可展开/收起配置信息（学生站位、初始技能、视频轴链接）</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>学生站位唯一性：每个站位只能选择不同的学生，避免重复选择</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>初始技能唯一性：每个初始技能只能选择不同的学生，避免重复选择</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>视频轴链接解析：自动识别并提取B站视频链接，忽略标题文本</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>生成识别码：点击"生成识别码"按钮，生成可分享的识别码</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>识别码复制：点击生成的识别码或复制按钮可复制到剪贴板</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>从识别码导入：在导入界面输入识别码，可快速导入数据</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>从文件导入：在导入界面点击"从文件导入"按钮，选择JSON文件导入数据</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -1768,16 +1810,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-                                        <h4 class="font-medium text-yellow-800 mb-2 flex items-center">
-                                            <i class="fas fa-info-circle mr-2"></i>支持的时间格式
-                                        </h4>
-                                        <p class="text-sm text-yellow-700">
-                                            系统支持多种时间格式，自动识别并转换：<br>
-                                            <strong>MM:SS.fff</strong>（如02:59.000）、<strong>MM:SS</strong>（如02:59或2:59）、<br>
-                                            <strong>SS.fff</strong>（如59.000）、<strong>SS</strong>（如59）、<strong>纯数字</strong>（如179）
-                                        </p>
-                                    </div>
+
                                 </div>
                                 
                                 <div class="mb-6">
@@ -1785,19 +1818,11 @@
                                     <ul class="space-y-2">
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span><strong>修改角色</strong>：系统会重新计算相关数据</span>
+                                            <span><strong>修改学生</strong>：修改学生属性后，系统会自动重新计算相关数据</span>
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span><strong>动作为空</strong>：自动设置为"技能"</span>
-                                        </li>
-                                        <li class="flex items-start gap-2 text-gray-700">
-                                            <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span><strong>撤销/重做</strong>：支持所有操作的撤销和重做，包括添加、编辑、删除数据项，添加、编辑、删除角色和规则等</span>
-                                        </li>
-                                        <li class="flex items-start gap-2 text-gray-700">
-                                            <i class="fas fa-check text-green-500 mt-1"></i>
-                                            <span><strong>复制最后一项</strong>：快速复制最后一条数据项，系统会自动更新时间，费用保持不变</span>
+                                            <span><strong>动作为空</strong>：添加数据项时，如果动作为空，系统会自动设置为"技能"</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -1880,12 +1905,12 @@
                                                 <i class="fas fa-info-circle mr-1"></i>
                                                 回费计算规则说明：
                                                 <ul class="list-disc pl-5 mt-1 space-y-1">
-                                                    <li>基础回费：角色原始回费速度 × 时间间隔</li>
-                                                    <li>固定值增加：来自费用效果规则的固定数值增加，应用于指定角色</li>
-                                                    <li>总回费增加百分比：角色属性中的回费增加百分比与费用效果规则的百分比累加</li>
+                                                    <li>基础回费：学生原始回费速度 × 时间间隔</li>
+                                                    <li>固定值增加：来自费用效果规则的固定数值增加，应用于指定学生</li>
+                                                    <li>总回费增加百分比：学生属性中的回费增加百分比与费用效果规则的百分比累加</li>
                                                     <li>固定值增加也会受到总回费增加百分比的加成</li>
-                                                    <li>角色属性中只有一个角色可以设置回费增加百分比（启用回费）</li>
-                                                    <li>该百分比会应用到所有角色的回费计算</li>
+                                                    <li>学生属性中只有一个学生可以设置回费增加百分比（启用回费）</li>
+                                                    <li>该百分比会应用到所有学生的回费计算</li>
                                                     <li>回费效果规则可叠加使用</li>
                                                 </ul>
                                             </div>
@@ -1924,7 +1949,7 @@
                                             <ul class="space-y-3 text-sm text-gray-700">
                                                 <li class="flex items-start gap-2">
                                                     <i class="fas fa-check text-green-500 mt-1"></i>
-                                                    <span><strong>减费效果</strong>：直接降低技能费用，减少实际扣除费用。可设置生效次数，次数用完后效果消失，角色技能费用恢复原值。<strong>注意：后应用的减费效果会覆盖之前的减费效果，而非叠加</strong></span>
+                                                    <span><strong>减费效果</strong>：直接降低技能费用，减少实际扣除费用。可设置生效次数，次数用完后效果消失，学生技能费用恢复原值。<strong>注意：后应用的减费效果会覆盖之前的减费效果，而非叠加</strong></span>
                                                 </li>
                                                 <li class="flex items-start gap-2">
                                                     <i class="fas fa-check text-green-500 mt-1"></i>
@@ -1934,16 +1959,16 @@
                                                     <i class="fas fa-check text-green-500 mt-1"></i>
                                                     <span><strong>费用效果</strong>：调整回费效果，可设置时间范围和作用对象：
                                                         <ul class="list-disc pl-5 mt-1 space-y-1">
-                                                            <li><strong>固定数值</strong>：直接增加或减少指定角色的回费速度，会受到启用回费的百分比加成影响</li>
-                                                            <li><strong>百分比</strong>：增加或减少回费百分比，与角色属性中的启用回费百分比累加</li>
-                                                            <li><strong>作用范围</strong>：可选择单个或多个角色应用效果</li>
+                                                            <li><strong>固定数值</strong>：直接增加或减少指定学生的回费速度，会受到启用回费的百分比加成影响</li>
+                                                            <li><strong>百分比</strong>：增加或减少回费百分比，与学生属性中的启用回费百分比累加</li>
+                                                            <li><strong>作用范围</strong>：可选择单个或多个学生应用效果</li>
                                                             <li><strong>时间范围</strong>：在指定的生效时间和持续时长内有效</li>
                                                         </ul>
                                                     </span>
                                                 </li>
                                                 <li class="flex items-start gap-2">
                                                     <i class="fas fa-check text-green-500 mt-1"></i>
-                                                    <span><strong>持续回费</strong>：为指定角色增加持续回费效果，该效果会受到启用回费的百分比加成影响</span>
+                                                    <span><strong>持续回费</strong>：为指定学生增加持续回费效果，该效果会受到启用回费的百分比加成影响</span>
                                                 </li>
                                             </ul>
                                         </div>
@@ -2014,9 +2039,9 @@
                                     <div class="note-item p-4 bg-yellow-50 rounded-lg border border-yellow-100 flex items-start gap-3">
                                         <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
                                         <div>
-                                            <h3 class="font-medium text-yellow-900 mb-1">角色数量限制</h3>
+                                            <h3 class="font-medium text-yellow-900 mb-1">学生数量限制</h3>
                                             <p class="text-sm text-yellow-800">
-                                                最多可添加6个角色，且只能有一个角色启用回费功能
+                                                最多可添加6个学生，且只能有一个学生启用回费功能
                                             </p>
                                         </div>
                                     </div>
@@ -2041,9 +2066,9 @@
                                     <div class="note-item p-4 bg-red-50 rounded-lg border border-red-100 flex items-start gap-3">
                                         <i class="fas fa-warning text-red-600 mt-1"></i>
                                         <div>
-                                            <h3 class="font-medium text-red-900 mb-1">角色删除</h3>
+                                            <h3 class="font-medium text-red-900 mb-1">学生删除</h3>
                                             <p class="text-sm text-red-800">
-                                                删除角色时，如果该角色已被数据项引用，需要先删除相关数据项
+                                                删除学生时，如果该学生已被数据项引用，需要先删除相关数据项
                                             </p>
                                         </div>
                                     </div>
@@ -2070,7 +2095,7 @@
                                     <div>
                                         <h3 class="font-medium text-orange-900 mb-1">减费效果生效次数</h3>
                                         <p class="text-sm text-orange-800">
-                                            减费效果的生效次数用完后，角色技能费用会自动恢复原值
+                                            减费效果的生效次数用完后，学生技能费用会自动恢复原值
                                         </p>
                                     </div>
                                 </div>
@@ -2128,7 +2153,7 @@
                     <h4 class="text-xl font-bold">碧蓝档案轴计算器</h4>
                     <p class="text-gray-500">版本 2.0.0</p>
                 </div>
-                <p class="text-center mb-4">一款用于管理游戏角色属性、精准计算技能费用与回费时间的工具，帮助玩家高效规划游戏内角色技能释放节奏。</p>
+                <p class="text-center mb-4">一款用于管理游戏学生属性、精准计算技能费用与回费时间的工具，帮助玩家高效规划游戏内学生技能释放节奏。</p>
                 <div class="text-center mb-4">
                     <button id="authorHomepage" class="btn-secondary">
                         <i class="fas fa-user mr-1"></i>前往作者主页
@@ -2200,13 +2225,13 @@
 
 
     
-    <!-- 角色特殊技能模态框 -->
+    <!-- 学生特殊技能模态框 -->
     <div id="specialSkillsModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-backdrop">
         <div class="modal-content large max-w-4xl">
             <div class="modal-header bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                 <h3 class="text-xl font-bold flex items-center gap-2">
                     <i class="fas fa-star"></i>
-                    角色特殊技能
+                    学生特殊技能
                 </h3>
             </div>
             <div class="modal-body p-6">
@@ -2307,7 +2332,7 @@
                 console.log('事件监听器:', window.App.eventListeners);
                 console.log('UI渲染器:', window.App.uiRenderer);
                 console.log('计算管理器:', window.App.calculator);
-                console.log('角色列表:', window.App.dataManager.characters);
+                console.log('学生列表:', window.App.dataManager.characters);
                 console.log('规则列表:', window.App.dataManager.rules);
                 console.log('数据项列表:', window.App.dataManager.dataItems);
             }

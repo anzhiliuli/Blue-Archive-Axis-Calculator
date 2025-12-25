@@ -1,7 +1,7 @@
 {
   "name": "blue-archive-calculator",
   "version": "1.0.0",
-  "description": "碧蓝档案轴计算器 - 用于规划和计算角色技能释放的时间轴",
+  "description": "碧蓝档案轴计算器 - 用于规划和计算学生技能释放的时间轴",
   "main": "src/js/index.js",
   "type": "module",
   "scripts": {

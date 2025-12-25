@@ -6,7 +6,7 @@ class Calculator {
         this.ruleCounters = {}; // 规则计数器，用于跟踪减费效果的生效次数
     }
 
-    // 计算总回费速度（考虑所有角色和持续回费功能）
+    // 计算总回费速度（考虑所有学生和持续回费功能）
     calculateTotalRecoveryRate(currentTime = 0, resetCounters = false) {
         // 如果需要重置规则计数器（例如在编辑表单计算时）
         if (resetCounters) {
@@ -16,9 +16,9 @@ class Calculator {
         const characters = this.dataManager.getCharacters();
         let totalRecoveryRate = 0;
         
-        // 为每个角色计算调整后的回费速度，然后相加得到总回费速度
+        // 为每个学生计算调整后的回费速度，然后相加得到总回费速度
         characters.forEach(char => {
-            // 应用费用效果规则和角色回费属性
+            // 应用费用效果规则和学生回费属性
             // 持续回费已经在applyChargeIncreaseRules方法中处理
             const adjustedRecoveryRate = this.applyChargeIncreaseRules(char.id, char.costRecoveryRate, currentTime);
             totalRecoveryRate += adjustedRecoveryRate;
@@ -27,7 +27,7 @@ class Calculator {
         return totalRecoveryRate;
     }
     
-    // 计算所有角色的总费用恢复
+    // 计算所有学生的总费用恢复
     calculateTotalCostRecovery(timeElapsed, currentTime = 0) {
         // 使用细粒度时间步长，每0.001秒计算一次（毫秒级精度）
         const timeStep = 0.001;
@@ -61,9 +61,9 @@ class Calculator {
         return parseFloat(cost.toFixed(2));
     }
 
-    // 计算单个角色的费用恢复
+    // 计算单个学生的费用恢复
     calculateCostRecovery(character, timeElapsed, currentTime = 0) {
-        // 应用费用效果规则和角色回费属性
+        // 应用费用效果规则和学生回费属性
         const adjustedRecoveryRate = this.applyChargeIncreaseRules(character.id, character.costRecoveryRate, currentTime);
         const recovery = adjustedRecoveryRate * timeElapsed;
         return parseFloat(recovery.toFixed(2));
@@ -102,7 +102,7 @@ class Calculator {
         // 找到最后一个匹配的减费规则（后添加的规则优先级更高）
         for (let i = reductionRules.length - 1; i >= 0; i--) {
             const rule = reductionRules[i];
-            // 减费效果：统一检查规则是否作用于当前角色
+            // 减费效果：统一检查规则是否作用于当前学生
             const isRuleApplied = Array.isArray(rule.targetCharacterIds) && rule.targetCharacterIds.includes(characterId);
             if (isRuleApplied) {
                 // 检查当前数据项是否在目标行之后（不包括当前目标行）
@@ -149,13 +149,13 @@ class Calculator {
         return parseFloat(finalCost.toFixed(2));
     }
     
-    // 应用费用效果规则和角色回费属性到单个角色
+    // 应用费用效果规则和学生回费属性到单个学生
     applyChargeIncreaseRules(characterId, recoveryRate, currentTime = 0) {
         const rules = this.dataManager.getRules();
         const character = this.dataManager.getCharacterById(characterId);
         
-        // 1. 先获取全局回费增加属性（所有角色使用相同的回费增加百分比）
-        // 查找设置了回费增加的角色（isChargePercentage为true的角色）
+        // 1. 先获取全局回费增加属性（所有学生使用相同的回费增加百分比）
+        // 查找设置了回费增加的学生（isChargePercentage为true的学生）
         const characters = this.dataManager.getCharacters();
         const chargeIncreaseCharacter = characters.find(char => char.isChargePercentage);
         let totalPercentageIncrease = chargeIncreaseCharacter && chargeIncreaseCharacter.costIncrease ? chargeIncreaseCharacter.costIncrease : 0;
@@ -165,7 +165,7 @@ class Calculator {
         
         // 3. 处理费用效果规则
         rules.forEach(rule => {
-            // 统一使用targetCharacterIds数组检查规则是否作用于当前角色
+            // 统一使用targetCharacterIds数组检查规则是否作用于当前学生
             const isRuleApplied = Array.isArray(rule.targetCharacterIds) && rule.targetCharacterIds.includes(characterId);
             
             if (isRuleApplied) {
@@ -240,7 +240,7 @@ class Calculator {
                 // 检查当前时间是否在生效范围内
                 // 注意：不包括startTime本身，避免影响目标行的费用计算
                 if (currentTimeInSeconds >= endTime && currentTimeInSeconds < startTime) {
-                    // 当前角色是持续回费的目标角色，累加到固定数值修改中
+                    // 当前学生是持续回费的目标学生，累加到固定数值修改中
                     continuousChargeIncrease = recoveryIncrease;
                 }
             }
@@ -265,7 +265,7 @@ class Calculator {
     calculateItemCost(item, previousCost) {
         const character = this.dataManager.getCharacterById(item.characterId);
         if (!character) {
-            // 找不到角色时，返回默认值
+            // 找不到学生时，返回默认值
             return {
                 remainingCost: parseFloat(previousCost.toFixed(3)),
                 costDeduction: 0
@@ -278,7 +278,7 @@ class Calculator {
         // 当前时间 = 数据项的时间
         const currentTime = parseFloat(item.time) || 0;
         
-        // 计算费用恢复（使用所有角色的总回费速度）
+        // 计算费用恢复（使用所有学生的总回费速度）
         const recoveredCost = this.calculateTotalCostRecovery(timeInterval, currentTime);
         let newCost = previousCost + recoveredCost;
         
@@ -288,11 +288,11 @@ class Calculator {
         
         // 计算并扣除费用（无论动作类型）
         let costDeduction = 0;
-        // 对于没有costChange规则的数据项，使用角色的技能费用作为基础费用
+        // 对于没有costChange规则的数据项，使用学生的技能费用作为基础费用
         // 对于有costChange规则的数据项，会在applyRuleCostChanges中被覆盖
         const baseCost = character.skillCost;
         
-        // 跟踪角色的技能使用次数
+        // 跟踪学生的技能使用次数
         const useCountKey = `useCount_${item.characterId}`;
         if (!this.ruleCounters[useCountKey]) {
             this.ruleCounters[useCountKey] = 0;
@@ -334,7 +334,7 @@ class Calculator {
         // 更新数据管理器中的当前费用为0
         this.dataManager.setCurrentCost(currentCost);
         
-        // 不预计算角色回费速度，因为需要根据当前时间动态计算
+        // 不预计算学生回费速度，因为需要根据当前时间动态计算
         // 费用效果规则需要根据具体时间点进行判断，所以在每次需要时重新计算
         
         // 预筛选规则，提高循环效率
@@ -342,7 +342,7 @@ class Calculator {
         const costReductionRules = rules.filter(rule => rule.type === 'costReduction');
         const costChangeRules = rules.filter(rule => rule.type === 'costChange');
         
-        // 跟踪每个角色的技能使用次数
+        // 跟踪每个学生的技能使用次数
         const useCounts = {};
         
         // 重新计算每个数据项的费用和时间间隔
@@ -441,11 +441,11 @@ class Calculator {
                 costDeduction = 0;
             } else {
                 // 对于普通行，正常计算费用扣除
-                // 对于没有costChange规则的数据项，使用角色的技能费用作为基础费用
+                // 对于没有costChange规则的数据项，使用学生的技能费用作为基础费用
                 // 对于有costChange规则的数据项，会在applyRuleCostChanges中被覆盖
                 const baseCost = character.skillCost;
                 
-                // 跟踪角色的技能使用次数
+                // 跟踪学生的技能使用次数
                 if (!useCounts[item.characterId]) {
                     useCounts[item.characterId] = 0;
                 }
@@ -500,7 +500,7 @@ class Calculator {
         const timeStep = 0.001;
         
         while (currentTime <= duration) {
-            // 计算所有角色的总费用恢复
+            // 计算所有学生的总费用恢复
             const recoveredCost = this.calculateTotalCostRecovery(timeStep, currentTime);
             
             // 更新当前费用
@@ -599,17 +599,17 @@ class Calculator {
 
     // 计算费用效率（每秒恢复的费用）
     calculateCostEfficiency(character) {
-        // 应用费用效果规则和角色回费属性
+        // 应用费用效果规则和学生回费属性
         const adjustedRecoveryRate = this.applyChargeIncreaseRules(character.id, character.costRecoveryRate);
         return parseFloat(adjustedRecoveryRate.toFixed(2));
     }
 
-    // 计算总费用效率（所有角色）
+    // 计算总费用效率（所有学生）
     calculateTotalCostEfficiency(characters) {
-        // 计算每个角色的调整后回费速度，然后相加得到总回费速度
+        // 计算每个学生的调整后回费速度，然后相加得到总回费速度
         let totalEfficiency = 0;
         characters.forEach(character => {
-            // 应用费用效果规则和角色回费属性
+            // 应用费用效果规则和学生回费属性
             const adjustedRecoveryRate = this.applyChargeIncreaseRules(character.id, character.costRecoveryRate);
             totalEfficiency += adjustedRecoveryRate;
         });

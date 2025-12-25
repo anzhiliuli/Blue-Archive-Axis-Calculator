@@ -821,7 +821,7 @@ pre code {
   border: none;
 }
 
-/* 角色预设弹窗玻璃态效果 */
+/* 学生预设弹窗玻璃态效果 */
 #characterPresetsModal .modal-content {
     /* 玻璃态核心样式 - 优化后 */
     background: rgba(249, 250, 251, 0.7) !important; /* 使用淡灰色背景，与主界面色调一致 */
@@ -1066,7 +1066,7 @@ pre code {
 
 /* 特定模态框样式微调 */
 
-/* 1. 角色相关模态框 */
+/* 1. 学生相关模态框 */
 #addCharacterModal .modal-content,
 #editCharacterModal .modal-content {
     max-width: 450px !important;
@@ -1123,9 +1123,9 @@ pre code {
     background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 253, 255, 0.6) 100%) !important;
 }
 
-/* 11. 时间轴视图模态框 - 复刻角色预设玻璃态效果 */
+/* 11. 时间轴视图模态框 - 复刻学生预设玻璃态效果 */
 #timelineModal .modal-content {
-    /* 玻璃态核心样式 - 复刻角色预设 */
+    /* 玻璃态核心样式 - 复刻学生预设 */
     background: rgba(249, 250, 251, 0.7) !important;
     backdrop-filter: blur(16px) isolate;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -1158,7 +1158,7 @@ pre code {
     gap: 20px !important;
 }
 
-/* 时间轴模态框头部 - 复刻角色预设 */
+/* 时间轴模态框头部 - 复刻学生预设 */
 #timelineModal .modal-header {
     border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
     padding-bottom: 1rem !important;
@@ -1168,16 +1168,16 @@ pre code {
     align-items: center !important;
 }
 
-/* 时间轴模态框头部标题 - 复刻角色预设 */
+/* 时间轴模态框头部标题 - 复刻学生预设 */
 #timelineModal .modal-header h3 {
     color: #1f2937 !important;
     font-weight: 700 !important;
     font-size: 1.25rem !important;
 }
 
-/* 时间轴统计卡片 - 复刻角色预设列表项效果 */
+/* 时间轴统计卡片 - 复刻学生预设列表项效果 */
 #timelineModal .stat-card {
-    /* 列表项玻璃态效果 - 复刻角色预设 */
+    /* 列表项玻璃态效果 - 复刻学生预设 */
     background: rgba(255, 255, 255, 0.5) !important;
     backdrop-filter: blur(12px) isolate !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -1188,7 +1188,7 @@ pre code {
     overflow: hidden !important;
 }
 
-/* 时间轴统计卡片悬停效果 - 复刻角色预设 */
+/* 时间轴统计卡片悬停效果 - 复刻学生预设 */
 #timelineModal .stat-card:hover {
     background: rgba(255, 255, 255, 0.7) !important;
     box-shadow: 
@@ -1199,9 +1199,9 @@ pre code {
     border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
-/* 时间轴图表容器 - 复刻角色预设列表项效果 */
+/* 时间轴图表容器 - 复刻学生预设列表项效果 */
 #timelineModal .chart-container {
-    /* 玻璃态效果 - 复刻角色预设 */
+    /* 玻璃态效果 - 复刻学生预设 */
     background: rgba(255, 255, 255, 0.5) !important;
     backdrop-filter: blur(12px) isolate !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -1225,7 +1225,7 @@ pre code {
     width: 100% !important;
 }
 
-/* 时间轴图表容器悬停效果 - 复刻角色预设 */
+/* 时间轴图表容器悬停效果 - 复刻学生预设 */
 #timelineModal .chart-container:hover {
     background: rgba(255, 255, 255, 0.7) !important;
     box-shadow: 
@@ -1281,9 +1281,9 @@ pre code {
     font-size: 0.9rem !important;
 }
 
-/* 时间轴事件卡片容器 - 复刻角色预设列表项效果 */
+/* 时间轴事件卡片容器 - 复刻学生预设列表项效果 */
 #timelineModal .glass-effect.p-4.rounded-xl.shadow-lg {
-    /* 玻璃态效果 - 复刻角色预设 */
+    /* 玻璃态效果 - 复刻学生预设 */
     background: rgba(255, 255, 255, 0.5) !important;
     backdrop-filter: blur(12px) isolate !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -1294,9 +1294,9 @@ pre code {
     overflow: hidden !important;
 }
 
-/* 时间轴卡片 - 复刻角色预设列表项效果 */
+/* 时间轴卡片 - 复刻学生预设列表项效果 */
 #timelineModal .timeline-card {
-    /* 玻璃态效果 - 复刻角色预设 */
+    /* 玻璃态效果 - 复刻学生预设 */
     background: rgba(255, 255, 255, 0.5) !important;
     backdrop-filter: blur(12px) isolate !important;
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
@@ -1307,7 +1307,7 @@ pre code {
     overflow: hidden !important;
 }
 
-/* 时间轴卡片悬停效果 - 复刻角色预设 */
+/* 时间轴卡片悬停效果 - 复刻学生预设 */
 #timelineModal .timeline-card:hover {
     background: rgba(255, 255, 255, 0.7) !important;
     box-shadow: 
@@ -1401,7 +1401,7 @@ pre code {
   }
 }
 
-/* 角色特殊技能卡片样式 */
+/* 学生特殊技能卡片样式 */
 .skill-card {
   background: linear-gradient(135deg, var(--card-bg) 0%, var(--bg-secondary) 100%);
   border: 1px solid var(--border-color);
