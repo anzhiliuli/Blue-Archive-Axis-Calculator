@@ -183,13 +183,7 @@ class EventListeners {
         // 添加附加数据按钮
         const addAdditionalDataBtn = document.getElementById('addAdditionalDataBtn');
         if (addAdditionalDataBtn) {
-            console.log('Adding event listener to addAdditionalDataBtn');
-            addAdditionalDataBtn.addEventListener('click', () => {
-                console.log('addAdditionalDataBtn clicked');
-                this.showAddAdditionalDataModal();
-            });
-        } else {
-            console.log('addAdditionalDataBtn not found');
+            addAdditionalDataBtn.addEventListener('click', () => this.showAddAdditionalDataModal());
         }
         
         // 添加附加数据保存按钮
@@ -332,7 +326,6 @@ class EventListeners {
     
     // 显示添加附加数据弹窗
     showAddAdditionalDataModal() {
-        console.log('showAddAdditionalDataModal called');
         // 生成目标行选项
         this.generateTargetRowOptions();
         
@@ -342,7 +335,6 @@ class EventListeners {
         
         // 显示弹窗
         const modal = document.getElementById('addAdditionalDataModal');
-        console.log('Showing modal:', modal);
         modal.classList.remove('hidden');
         modal.classList.add('show'); // 添加show类以触发CSS显示效果
         modal.style.display = 'flex'; // 确保显示，因为ModalManager会设置display: none
@@ -350,11 +342,8 @@ class EventListeners {
     
     // 生成目标行选项
     generateTargetRowOptions() {
-        console.log('generateTargetRowOptions called');
         const select = document.getElementById('targetRowSelect');
-        console.log('targetRowSelect:', select);
         const dataItems = this.dataManager.getDataItems();
-        console.log('dataItems:', dataItems);
         
         // 清空现有选项
         select.innerHTML = '<option value="">请选择要添加附加数据的行</option>';
@@ -375,7 +364,6 @@ class EventListeners {
                 option.textContent = `${formattedTime} - ${characterName} - ${item.action}`;
                 select.appendChild(option);
             } catch (error) {
-                console.error('Error formatting time:', error);
                 option.textContent = `${item.time} - ${characterName} - ${item.action}`;
                 select.appendChild(option);
             }
@@ -1430,7 +1418,7 @@ class EventListeners {
                 radio.addEventListener('change', (e) => {
                     // 保存选中的目标行ID
                     window.selectedTargetRowId = parseInt(e.target.value);
-                    console.log('选中的目标行ID:', window.selectedTargetRowId);
+
                 });
             });
         }, 100);
@@ -1721,13 +1709,13 @@ class EventListeners {
         e.preventDefault();
         
         // 添加调试信息
-        console.log('点击了保存按钮，开始处理添加规则');
+
         
         const ruleType = document.getElementById('ruleType').value;
         const ruleSourceCharacterValue = document.getElementById('ruleSourceCharacter').value;
         const characterId = ruleSourceCharacterValue ? parseInt(ruleSourceCharacterValue) : 0;
         
-        console.log('规则类型:', ruleType, '触发学生ID:', characterId);
+
         
         let ruleData;
         
@@ -1786,16 +1774,16 @@ class EventListeners {
                 };
                 break;
             default:
-                console.log('未选择规则类型');
+
                 this.modalManager.showToast('请选择规则类型', 'error');
                 return;
         }
 
-        console.log('规则数据:', ruleData);
+
         
         // 检查每个字段的值
-        console.log('characterId:', characterId);
-        console.log('ruleType:', ruleType);
+
+
         
         // 根据规则类型打印相关字段信息
         switch (ruleType) {
@@ -1803,18 +1791,18 @@ class EventListeners {
                 const crTargetCharacter = document.getElementById('crTargetCharacter');
                 const crEffectCount = document.getElementById('crEffectCount');
                 const crValue = document.getElementById('crValue');
-                if (crTargetCharacter) console.log('crTargetCharacter:', crTargetCharacter.value);
-                if (crEffectCount) console.log('crEffectCount:', crEffectCount.value);
-                if (crValue) console.log('crValue:', crValue.value);
+
+
+
                 break;
 
 
             case 'costChange':
                 const ccValue = document.getElementById('ccValue');
                 if (ccValue) {
-                    console.log('ccValue:', ccValue.value);
-                    console.log('ccValue类型:', typeof ccValue.value);
-                    console.log('changeValue:', parseFloat(ccValue.value));
+
+
+
                 }
                 break;
             case 'chargeIncrease':
@@ -1823,27 +1811,27 @@ class EventListeners {
                 const ciChargeType = document.getElementById('ciChargeType');
                 const ciValue = document.getElementById('ciValue');
                 const ciEffectType = document.getElementById('ciEffectType');
-                if (ciActivationTime) console.log('ciActivationTime:', ciActivationTime.value);
-                if (ciDuration) console.log('ciDuration:', ciDuration.value);
-                if (ciChargeType) console.log('ciChargeType:', ciChargeType.value);
-                if (ciValue) console.log('ciValue:', ciValue.value);
-                if (ciEffectType) console.log('ciEffectType:', ciEffectType.value);
+
+
+
+
+
                 // 直接获取选中的学生ID进行打印，避免变量作用域问题
                 const checkedBoxes = document.querySelectorAll('#ciTargetScopeContainer input[type="checkbox"]:checked');
                 const selectedCharacterIds = Array.from(checkedBoxes).map(cb => parseInt(cb.value));
-                console.log('targetCharacterIds:', selectedCharacterIds);
+
                 break;
         }
         
         // 验证表单数据
         if (!this.validateRuleForm(ruleData)) {
-            console.log('表单验证失败');
-            console.log('验证失败的规则数据:', ruleData);
+
+
             this.modalManager.showToast('请填写所有必填字段', 'error');
             return;
         }
 
-        console.log('表单验证通过，开始添加规则');
+
         
         // 添加规则
         this.dataManager.addRule(ruleData);
@@ -1864,10 +1852,10 @@ class EventListeners {
         window.selectedTargetRowId = null;
         this.currentTargetRowId = null;
         
-        console.log('规则添加成功');
-        console.log('已清空选中的目标行ID，下次添加规则需要重新选择');
-        console.log('window.selectedTargetRowId:', window.selectedTargetRowId);
-        console.log('this.currentTargetRowId:', this.currentTargetRowId);
+
+
+
+
     }
 
     // 处理编辑规则

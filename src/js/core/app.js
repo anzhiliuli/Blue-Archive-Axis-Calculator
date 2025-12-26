@@ -167,7 +167,7 @@ class App {
                     radio.addEventListener('change', (e) => {
                         // 保存选中的目标行ID
                         window.selectedTargetRowId = parseInt(e.target.value);
-                        console.log('选中的目标行ID:', window.selectedTargetRowId);
+
                     });
                 });
             }
