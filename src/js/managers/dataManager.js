@@ -8,7 +8,8 @@ class DataManager {
         this.totalCost = 10;     // 总费用上限
         this.nextId = 1;         // 用于生成唯一ID的计数器
         this.hideSpecialRows = false; // 是否隐藏特殊行
-        this.continuousChargeData = null; // 持续回费设置
+        this.continuousChargeData = []; // 持续回费设置数组
+        this.initializationDuration = 0; // 初始化持续时间
         
         // 新增：导出信息字段
         this.exportInfo = {
@@ -423,7 +424,7 @@ class DataManager {
         this.currentCost = 0;
         this.nextId = 1;
         this.hideSpecialRows = false;
-        this.continuousChargeData = null;
+        this.continuousChargeData = [];
         this.initializationDuration = 0;
         this.currentPage = 1;
         this.pageSize = 10;
@@ -469,7 +470,7 @@ class DataManager {
                 this.nextId = parsedData.nextId || 1;
                 this.initializationDuration = parsedData.initializationDuration || 0;
                 this.hideSpecialRows = parsedData.hideSpecialRows || false;
-                this.continuousChargeData = parsedData.continuousChargeData || null;
+                this.continuousChargeData = parsedData.continuousChargeData || [];
                 this.currentPage = parsedData.currentPage || 1;
                 this.pageSize = parsedData.pageSize || 10;
                 return true;
@@ -513,7 +514,7 @@ class DataManager {
             if (data.nextId) this.nextId = data.nextId;
             if (data.initializationDuration !== undefined) this.initializationDuration = data.initializationDuration;
             if (data.hideSpecialRows !== undefined) this.hideSpecialRows = data.hideSpecialRows;
-            if (data.continuousChargeData !== undefined) this.continuousChargeData = data.continuousChargeData;
+            if (data.continuousChargeData !== undefined) this.continuousChargeData = Array.isArray(data.continuousChargeData) ? data.continuousChargeData : [];
             if (data.currentPage !== undefined) this.currentPage = data.currentPage;
             if (data.pageSize !== undefined) this.pageSize = data.pageSize;
             if (data.exportInfo !== undefined) {
@@ -589,10 +590,21 @@ class DataManager {
         return this.initializationDuration || 0;
     }
     
-    // 设置持续回费数据
+    // 添加持续回费数据
     setContinuousChargeData(data) {
         this.saveState();
-        this.continuousChargeData = data;
+        // 确保continuousChargeData是数组
+        if (!Array.isArray(this.continuousChargeData)) {
+            this.continuousChargeData = [];
+        }
+        // 添加新的持续回费设置到数组中
+        this.continuousChargeData.push(data);
+    }
+    
+    // 清空持续回费数据
+    clearContinuousChargeData() {
+        this.saveState();
+        this.continuousChargeData = [];
     }
     
     // 设置当前费用

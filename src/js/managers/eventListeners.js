@@ -7,6 +7,7 @@ class EventListeners {
         this.modalManager = modalManager;
         this.app = app;
         this.currentTargetRowId = null;
+        this.skillBindingModalEventsAdded = false; // 标记是否已添加技能绑定模态框事件监听器
         this.initAllListeners();
     }
 
@@ -264,7 +265,7 @@ class EventListeners {
                 this.dataManager.rules = [];
                 
                 // 清空持续回费设置
-                this.dataManager.setContinuousChargeData(null);
+                this.dataManager.clearContinuousChargeData();
                 
                 // 重置导出信息
                 this.dataManager.exportInfo = {
@@ -428,15 +429,6 @@ class EventListeners {
             });
         }
         
-        // 刷新按钮
-        const refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => {
-                this.uiRenderer.refreshAll();
-                this.modalManager.showToast('数据表已刷新', 'success');
-            });
-        }
-        
         // 隐藏/显示特殊行按钮
         const toggleSpecialRowsBtn = document.getElementById('toggleSpecialRowsBtn');
         if (toggleSpecialRowsBtn) {
@@ -565,42 +557,45 @@ class EventListeners {
                 // 更新选中目标行信息
                 this.updateSelectedTargetRowInfo();
                 
-                // 为关闭按钮添加事件监听器
-                setTimeout(() => {
-                    // 关闭按钮
-                    const closeBtn = document.querySelector('#skillBindingModal .closeModal');
-                    if (closeBtn) {
-                        closeBtn.addEventListener('click', () => {
-                            this.modalManager.hideModal('skillBindingModal');
-                        });
-                    }
-                    
-                    // 取消按钮
-                    const cancelBtn = document.getElementById('cancelBindingBtn');
-                    if (cancelBtn) {
-                        cancelBtn.addEventListener('click', () => {
-                            this.modalManager.hideModal('skillBindingModal');
-                        });
-                    }
-                    
-                    // 保存按钮
-                    const saveBtn = document.getElementById('saveBindingBtn');
-                    if (saveBtn) {
-                        saveBtn.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            this.handleContinuousChargeSave();
-                        });
-                    }
-                    
-                    // 表单提交
-                    const form = document.getElementById('continuousChargeForm');
-                    if (form) {
-                        form.addEventListener('submit', (e) => {
-                            e.preventDefault();
-                            this.handleContinuousChargeSave();
-                        });
-                    }
-                }, 100);
+                // 只在第一次打开模态框时添加事件监听器
+                if (!this.skillBindingModalEventsAdded) {
+                    setTimeout(() => {
+                        // 关闭按钮
+                        const closeBtn = document.querySelector('#skillBindingModal .closeModal');
+                        if (closeBtn) {
+                            closeBtn.addEventListener('click', () => {
+                                this.modalManager.hideModal('skillBindingModal');
+                            });
+                        }
+                        
+                        // 取消按钮
+                        const cancelBtn = document.getElementById('cancelBindingBtn');
+                        if (cancelBtn) {
+                            cancelBtn.addEventListener('click', () => {
+                                this.modalManager.hideModal('skillBindingModal');
+                            });
+                        }
+                        
+                        // 保存按钮
+                        const saveBtn = document.getElementById('saveBindingBtn');
+                        if (saveBtn) {
+                            saveBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                this.handleContinuousChargeSave();
+                            });
+                        }
+                        
+                        // 表单提交
+                        const form = document.getElementById('continuousChargeForm');
+                        if (form) {
+                            form.addEventListener('submit', (e) => {
+                                e.preventDefault();
+                                this.handleContinuousChargeSave();
+                            });
+                        }
+                    }, 100);
+                    this.skillBindingModalEventsAdded = true;
+                }
             });
         }
         
@@ -1210,6 +1205,26 @@ class EventListeners {
         
         // 清空选中的目标行ID，确保下次操作时需要重新选择目标行
         window.selectedTargetRowId = null;
+        
+        // 清空表单字段的值，确保下次操作时表单是干净的
+        document.getElementById('delayTime').value = '';
+        document.getElementById('duration').value = '';
+        document.getElementById('recoveryIncrease').value = '';
+        
+        // 重新为所有目标行单选框添加事件监听，确保重新渲染后仍能正常工作
+        setTimeout(() => {
+            const radioButtons = document.querySelectorAll('.target-row-radio');
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    // 保存选中的目标行ID
+                    window.selectedTargetRowId = parseInt(e.target.value);
+                    console.log('选中的目标行ID:', window.selectedTargetRowId);
+                });
+            });
+        }, 100);
+        
+        // 刷新数据表，显示更新后的数据
+        this.uiRenderer.refreshAll();
     }
     
     // 验证学生表单
@@ -1372,7 +1387,7 @@ class EventListeners {
                     if (this.selectedRowTime) {
                         const activationTimeInput = document.getElementById('ciActivationTime');
                         if (activationTimeInput) {
-                            activationTimeInput.value = parseFloat(this.selectedRowTime).toFixed(2);
+                            activationTimeInput.value = parseFloat(this.selectedRowTime).toFixed(3);
                         }
                     }
                     // 生成学生多选选项
@@ -2694,17 +2709,17 @@ class EventListeners {
             this.modalManager.hideModal('importExportModal');
             
             if (success) {
+                // 设置数据表为已初始化状态
+                if (this.app) {
+                    this.app.setDataTableInitialized(true);
+                }
+                
+                // 重新计算所有数据项
+                this.calculator.recalculateAllItems();
+                
                 this.modalManager.showToast('数据导入成功', 'success');
                 // 刷新界面
-                this.uiRenderer.renderCharacterList();
-                this.uiRenderer.renderRuleList();
-                this.uiRenderer.renderDataItemList();
-                this.uiRenderer.updateStatusInfo();
-                this.uiRenderer.updateCharacterSelects();
-                this.uiRenderer.updateStatusBar();
-                this.uiRenderer.updateCostChart();
-                // 渲染导入信息
-                this.uiRenderer.renderImportInfo();
+                this.uiRenderer.refreshAll();
             } else {
                 this.modalManager.showToast('数据导入失败，数据格式不正确', 'error');
             }
