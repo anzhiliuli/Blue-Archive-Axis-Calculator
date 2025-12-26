@@ -10,6 +10,7 @@ class DataManager {
         this.hideSpecialRows = false; // 是否隐藏特殊行
         this.continuousChargeData = []; // 持续回费设置数组
         this.initializationDuration = 0; // 初始化持续时间
+        this.showCompleteData = false; // 是否显示完整数据
         
         // 新增：导出信息字段
         this.exportInfo = {
@@ -270,7 +271,12 @@ class DataManager {
             timeInterval: itemData.timeInterval || (lastItem ? this.getTimeFromItem(itemData) - this.getTimeFromItem(lastItem) : 0),
             costDeduction: 0,
             remainingCost: 0,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            // 新增：附加数据字段
+            additionalData: {
+                note: '', // 备注
+                imageUrl: '' // 图片URL
+            }
         };
         
         this.dataItems.push(newItem);
@@ -282,11 +288,44 @@ class DataManager {
         this.saveState();
         const index = this.dataItems.findIndex(item => item.id === id);
         if (index !== -1) {
+            // 确保additionalData字段存在
+            if (!this.dataItems[index].additionalData) {
+                this.dataItems[index].additionalData = {
+                    note: '',
+                    imageUrl: ''
+                };
+            }
+            
             this.dataItems[index] = {
                 ...this.dataItems[index],
                 ...itemData,
                 updatedAt: new Date().toISOString()
             };
+            return this.dataItems[index];
+        }
+        return null;
+    }
+    
+    // 更新数据项的附加数据
+    updateAdditionalData(id, additionalData) {
+        this.saveState();
+        const index = this.dataItems.findIndex(item => item.id === id);
+        if (index !== -1) {
+            // 确保additionalData字段存在
+            if (!this.dataItems[index].additionalData) {
+                this.dataItems[index].additionalData = {
+                    note: '',
+                    imageUrl: ''
+                };
+            }
+            
+            // 更新附加数据
+            this.dataItems[index].additionalData = {
+                ...this.dataItems[index].additionalData,
+                ...additionalData
+            };
+            
+            this.dataItems[index].updatedAt = new Date().toISOString();
             return this.dataItems[index];
         }
         return null;
@@ -357,6 +396,16 @@ class DataManager {
         return this.hideSpecialRows;
     }
     
+    // 设置是否显示完整数据
+    setShowCompleteData(show) {
+        this.showCompleteData = show;
+    }
+    
+    // 获取是否显示完整数据
+    getShowCompleteData() {
+        return this.showCompleteData;
+    }
+    
     // 分页相关方法
     // 获取当前页码
     getCurrentPage() {
@@ -392,10 +441,16 @@ class DataManager {
     getPaginatedDataItems() {
         let items = this.getDataItems(); // 已考虑隐藏特殊行
         
-        const startIndex = (this.currentPage - 1) * this.pageSize;
-        const endIndex = startIndex + this.pageSize;
-        
-        return items.slice(startIndex, endIndex);
+        if (this.showCompleteData) {
+            // 如果显示完整数据，返回所有数据项
+            return items;
+        } else {
+            // 否则返回分页后的数据项
+            const startIndex = (this.currentPage - 1) * this.pageSize;
+            const endIndex = startIndex + this.pageSize;
+            
+            return items.slice(startIndex, endIndex);
+        }
     }
 
     // 根据ID获取数据项

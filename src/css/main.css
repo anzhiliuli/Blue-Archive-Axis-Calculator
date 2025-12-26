@@ -314,18 +314,18 @@ body {
 }
 
 .left-panel {
-    width: 25%;
-    min-width: 320px;
+    width: 28%;
+    min-width: 300px;
 }
 
 .middle-panel {
-    width: 55%;
-    min-width: 500px;
+    width: 54%;
+    min-width: 400px;
 }
 
 .right-panel {
-    width: 20%;
-    min-width: 280px;
+    width: 18%;
+    min-width: 250px;
 }
 
 /* ========== Layout styles ========== */
@@ -371,12 +371,12 @@ section:hover {
 }
 
 .middle-panel {
-    width: 50%;
+    width: 54%;
     min-width: 400px;
 }
 
 .right-panel {
-    width: 22%;
+    width: 18%;
     min-width: 250px;
 }
 
@@ -1349,6 +1349,61 @@ pre code {
 /* 滚动条角落样式 */
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* 自定义右键菜单样式 */
+.context-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    z-index: 10000;
+    min-width: 160px;
+    overflow: hidden;
+}
+
+.context-menu.hidden {
+    display: none;
+}
+
+.context-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.25rem;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease;
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+.context-menu-item:hover {
+    background-color: #f3f4f6;
+}
+
+.context-menu-item i {
+    width: 1rem;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.context-menu-item:hover i {
+    color: #374151;
+}
+
+.context-menu-divider {
+    height: 1px;
+    background-color: #e5e7eb;
+    margin: 0.25rem 0;
 }
 
 /* Firefox滚动条样式 */

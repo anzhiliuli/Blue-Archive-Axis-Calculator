@@ -66,6 +66,9 @@ class App {
             // 设置应用为已初始化状态
             this.isInitialized = true;
             
+            // 将app实例暴露到全局，以便其他组件访问
+            window.appInstance = this;
+            
             // 刷新所有UI组件
             this.uiRenderer.refreshAll();
             
@@ -86,14 +89,14 @@ class App {
         // 学生表格配置
         this.tables.characters = new DataTable('charactersTable', [
             { field: 'name', title: '学生名', sortable: true },
-            { field: 'costRecoveryRate', title: '回费速度', sortable: true },
-            { field: 'skillCost', title: '技能费用', sortable: true },
-            { field: 'costIncrease', title: '回费增加', sortable: true },
-            { field: 'isChargePercentage', title: '启用回费', sortable: true, render: (item) => {
+            { field: 'costRecoveryRate', title: '回费<br>速度', sortable: true },
+            { field: 'skillCost', title: '技能<br>费用', sortable: true },
+            { field: 'costIncrease', title: '回费<br>增加', sortable: true },
+            { field: 'isChargePercentage', title: '启用<br>回费', sortable: true, render: (item) => {
                 return item.isChargePercentage ? '<span class="text-success font-bold">√</span>' : '-';
             }}
         ], {
-            showActions: true,
+            showActions: false,
             actions: [
                 { icon: 'fa-pencil', text: '编辑', className: 'btn-edit', title: '编辑学生', callback: (item) => this.editCharacter(item) },
                 { icon: 'fa-trash', text: '删除', className: 'btn-delete', title: '删除学生', callback: (item) => this.deleteCharacter(item) }
@@ -151,7 +154,7 @@ class App {
                 return item.remainingCost.toFixed(2);
             }}
         ], {
-            showActions: true,
+            showActions: false,
             actions: [
                 { icon: 'fa-pencil', text: '编辑', className: 'btn-edit', title: '编辑数据项', callback: (item) => this.editDataItem(item) },
                 { icon: 'fa-trash', text: '删除', className: 'btn-delete', title: '删除数据项', callback: (item) => this.deleteDataItem(item) }
@@ -283,6 +286,11 @@ class App {
     // 注册自定义模块
     registerModule(moduleName, moduleInstance) {
         this.modules[moduleName] = moduleInstance;
+    }
+    
+    // 查看附加数据
+    viewAdditionalData(dataItemId) {
+        this.eventListeners.viewAdditionalData(dataItemId);
     }
 }
 

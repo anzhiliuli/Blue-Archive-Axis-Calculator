@@ -179,6 +179,26 @@ class EventListeners {
                 }
             });
         }
+        
+        // 添加附加数据按钮
+        const addAdditionalDataBtn = document.getElementById('addAdditionalDataBtn');
+        if (addAdditionalDataBtn) {
+            console.log('Adding event listener to addAdditionalDataBtn');
+            addAdditionalDataBtn.addEventListener('click', () => {
+                console.log('addAdditionalDataBtn clicked');
+                this.showAddAdditionalDataModal();
+            });
+        } else {
+            console.log('addAdditionalDataBtn not found');
+        }
+        
+        // 添加附加数据保存按钮
+        const saveAdditionalDataBtn = document.getElementById('saveAdditionalDataBtn');
+        if (saveAdditionalDataBtn) {
+            saveAdditionalDataBtn.addEventListener('click', () => this.saveAdditionalData());
+        }
+        
+
 
         // 编辑数据项表单提交
         const editDataItemForm = document.getElementById('editDataItemForm');
@@ -306,9 +326,160 @@ class EventListeners {
                 
                 this.modalManager.hideAllModals();
                 this.modalManager.showToast(`已成功初始化，初始时间：${initialTimeStr}`, 'success');
-                this.uiRenderer.refreshAll();
             });
         }
+    }
+    
+    // 显示添加附加数据弹窗
+    showAddAdditionalDataModal() {
+        console.log('showAddAdditionalDataModal called');
+        // 生成目标行选项
+        this.generateTargetRowOptions();
+        
+        // 清空表单
+        document.getElementById('additionalNote').value = '';
+        document.getElementById('additionalImage').value = '';
+        
+        // 显示弹窗
+        const modal = document.getElementById('addAdditionalDataModal');
+        console.log('Showing modal:', modal);
+        modal.classList.remove('hidden');
+        modal.classList.add('show'); // 添加show类以触发CSS显示效果
+        modal.style.display = 'flex'; // 确保显示，因为ModalManager会设置display: none
+    }
+    
+    // 生成目标行选项
+    generateTargetRowOptions() {
+        console.log('generateTargetRowOptions called');
+        const select = document.getElementById('targetRowSelect');
+        console.log('targetRowSelect:', select);
+        const dataItems = this.dataManager.getDataItems();
+        console.log('dataItems:', dataItems);
+        
+        // 清空现有选项
+        select.innerHTML = '<option value="">请选择要添加附加数据的行</option>';
+        
+        // 添加数据项选项，排除初始化行
+        dataItems.forEach(item => {
+            // 排除初始化行
+            if (item.action === '初始化') {
+                return;
+            }
+            
+            const character = this.dataManager.getCharacterById(item.characterId);
+            const characterName = character ? character.name : '未知学生';
+            const option = document.createElement('option');
+            option.value = item.id;
+            try {
+                const formattedTime = this.app.utils.format.timeMMSSfff(item.time);
+                option.textContent = `${formattedTime} - ${characterName} - ${item.action}`;
+                select.appendChild(option);
+            } catch (error) {
+                console.error('Error formatting time:', error);
+                option.textContent = `${item.time} - ${characterName} - ${item.action}`;
+                select.appendChild(option);
+            }
+        });
+    }
+    
+    // 上传图片到ImgBB
+    async uploadImageToImgBB(file) {
+        try {
+            // 注意：这里使用示例API密钥，实际使用时需要替换为自己的
+            // 请访问 https://imgbb.com/ 注册并获取API密钥
+            const API_KEY = '26ba61c466374bf9336a8f4427ed5a9a';
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                return data.data.url;
+            } else {
+                throw new Error(data.error.message);
+            }
+        } catch (error) {
+            console.error('图片上传失败:', error);
+            this.modalManager.showToast('图片上传失败: ' + error.message, 'error');
+            return null;
+        }
+    }
+    
+    // 保存附加数据
+    async saveAdditionalData() {
+        const targetRowId = parseInt(document.getElementById('targetRowSelect').value);
+        const note = document.getElementById('additionalNote').value;
+        const imageFile = document.getElementById('additionalImage').files[0];
+        
+        if (!targetRowId) {
+            this.modalManager.showToast('请选择目标行', 'warning');
+            return;
+        }
+        
+        let imageUrl = '';
+        
+        // 如果选择了图片，上传到ImgBB
+        if (imageFile) {
+            imageUrl = await this.uploadImageToImgBB(imageFile);
+            if (imageUrl === null) {
+                // 图片上传失败，停止保存
+                return;
+            }
+        }
+        
+        // 更新数据项的附加数据
+        const updatedItem = this.dataManager.updateAdditionalData(targetRowId, {
+            note: note,
+            imageUrl: imageUrl
+        });
+        
+        if (updatedItem) {
+            this.modalManager.showToast('附加数据保存成功', 'success');
+            
+            // 刷新UI
+            this.uiRenderer.refreshAll();
+            
+            // 关闭弹窗
+            this.modalManager.hideModal('addAdditionalDataModal');
+        } else {
+            this.modalManager.showToast('保存失败，目标行不存在', 'error');
+        }
+    }
+    
+    // 查看附加数据
+    viewAdditionalData(dataItemId) {
+        const dataItem = this.dataManager.getDataItemById(dataItemId);
+        if (!dataItem || !dataItem.additionalData) {
+            this.modalManager.showToast('该数据项没有附加数据', 'info');
+            return;
+        }
+        
+        const additionalData = dataItem.additionalData;
+        
+        // 填充数据到查看窗口
+        const noteElement = document.getElementById('viewAdditionalNote');
+        const imageElement = document.getElementById('viewAdditionalImage');
+        
+        // 显示备注
+        noteElement.textContent = additionalData.note || '无备注';
+        
+        // 显示图片
+        if (additionalData.imageUrl) {
+            imageElement.innerHTML = `<img src="${additionalData.imageUrl}" alt="附加图片" class="max-w-full max-h-60 rounded">`;
+        } else {
+            imageElement.innerHTML = '<p class="text-gray-500">无图片</p>';
+        }
+        
+        // 显示弹窗
+        const modal = document.getElementById('viewAdditionalDataModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('show'); // 添加show类以触发CSS显示效果
+        modal.style.display = 'flex'; // 确保显示，因为ModalManager会设置display: none
     }
 
     // 初始化通用事件监听器
@@ -637,6 +808,47 @@ class EventListeners {
             refreshTableBtn.addEventListener('click', () => {
                 this.uiRenderer.refreshAll();
                 this.modalManager.showToast('表格已刷新', 'success');
+            });
+        }
+        
+        // 显示完整数据按钮
+        const showCompleteDataBtn = document.getElementById('showCompleteDataBtn');
+        if (showCompleteDataBtn) {
+            showCompleteDataBtn.addEventListener('click', () => {
+                // 切换显示完整数据状态
+                const currentState = this.dataManager.getShowCompleteData();
+                const newState = !currentState;
+                
+                // 更新数据管理器状态
+                this.dataManager.setShowCompleteData(newState);
+                
+                // 切换中间数据管理面板中除数据表外的其他元素的显示/隐藏
+                const addItemSection = document.getElementById('toggleAddItemBtn').parentElement;
+                const ruleSection = document.getElementById('rulesTable').parentElement;
+                const filterSection = document.getElementById('toggleFilterBtn').parentElement;
+                
+                if (newState) {
+                    // 隐藏其他元素
+                    addItemSection.style.display = 'none';
+                    ruleSection.style.display = 'none';
+                    filterSection.style.display = 'none';
+                    
+                    // 更新按钮文本
+                    showCompleteDataBtn.innerHTML = '<i class="fas fa-table"></i> 恢复默认视图';
+                    this.modalManager.showToast('已显示完整数据', 'success');
+                } else {
+                    // 显示其他元素
+                    addItemSection.style.display = 'block';
+                    ruleSection.style.display = 'block';
+                    filterSection.style.display = 'block';
+                    
+                    // 更新按钮文本
+                    showCompleteDataBtn.innerHTML = '<i class="fas fa-table"></i> 显示完整数据';
+                    this.modalManager.showToast('已恢复默认视图', 'success');
+                }
+                
+                // 刷新UI
+                this.uiRenderer.refreshAll();
             });
         }
         

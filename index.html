@@ -357,6 +357,10 @@
                         </div>
                     </div>
                     <div class="mt-3 flex justify-end gap-2">
+                        <button id="addAdditionalDataBtn" class="btn-secondary">
+                            <i class="fas fa-plus-circle"></i>
+                            添加附加数据
+                        </button>
                         <button id="copyLastItemBtn" class="btn-outline">
                             <i class="fas fa-copy"></i>
                             复制上一项
@@ -479,6 +483,10 @@
                 <button id="initializeBtn" class="btn-accent">
                     <i class="fas fa-play"></i>
                     初始化数据表
+                </button>
+                <button id="showCompleteDataBtn" class="btn-secondary">
+                    <i class="fas fa-table"></i>
+                    显示完整数据
                 </button>
             </div>
             
@@ -647,9 +655,106 @@
     <!-- 页脚 -->
     <footer class="bg-white shadow-inner py-4">
         <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
-            <p>© 2025 碧蓝档案轴计算器 | 版本 2.0.0</p>
+            <p>© 2025 碧蓝档案轴计算器 | 版本 2.1.3</p>
         </div>
     </footer>
+
+    <!-- 数据表右键菜单 -->
+    <div id="tableContextMenu" class="context-menu hidden">
+        <ul class="context-menu-list">
+            <li class="context-menu-item" data-action="edit">
+                <i class="fas fa-edit"></i> 编辑
+            </li>
+            <li class="context-menu-item" data-action="viewAdditionalData">
+                <i class="fas fa-info-circle"></i> 查看附加数据
+            </li>
+            <li class="context-menu-item" data-action="delete">
+                <i class="fas fa-trash"></i> 删除
+            </li>
+        </ul>
+    </div>
+    
+    <!-- 附加数据添加弹窗 -->
+    <div id="addAdditionalDataModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-backdrop">
+        <div class="modal-content glass-effect max-w-md w-full mx-4">
+            <div class="modal-header">
+                <h3 class="text-xl font-semibold flex items-center">
+                    <i class="fas fa-plus-circle text-primary mr-2"></i>添加附加数据
+                </h3>
+                <button class="close-modal-btn" onclick="window.appInstance.modalManager.hideModal('addAdditionalDataModal')">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <!-- 目标行选择 -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">选择目标行</label>
+                        <select id="targetRowSelect" class="input-field w-full">
+                            <option value="">请选择要添加附加数据的行</option>
+                            <!-- 选项将通过JavaScript动态生成 -->
+                        </select>
+                    </div>
+                    
+                    <!-- 备注输入 -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">备注说明</label>
+                        <textarea id="additionalNote" class="input-field w-full" rows="4" placeholder="请输入备注说明..."></textarea>
+                    </div>
+                    
+                    <!-- 图片上传 -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">图片上传</label>
+                        <div class="upload-container border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                            <input type="file" id="additionalImage" accept="image/*" class="hidden">
+                            <button type="button" onclick="document.getElementById('additionalImage').click()" class="btn-secondary w-full">
+                                <i class="fas fa-upload mr-2"></i>选择图片
+                            </button>
+                            <p class="text-xs text-gray-500 mt-2">支持JPG、PNG、GIF格式，最大16MB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-outline" onclick="window.appInstance.modalManager.hideModal('addAdditionalDataModal')">取消</button>
+                <button id="saveAdditionalDataBtn" class="btn-primary">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 附加数据查看弹窗 -->
+    <div id="viewAdditionalDataModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-backdrop">
+        <div class="modal-content glass-effect max-w-md w-full mx-4">
+            <div class="modal-header">
+                <h3 class="text-xl font-semibold flex items-center">
+                    <i class="fas fa-info-circle text-primary mr-2"></i>查看附加数据
+                </h3>
+                <button class="close-modal-btn" onclick="window.appInstance.modalManager.hideModal('viewAdditionalDataModal')">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <!-- 备注显示 -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">备注说明</label>
+                        <div id="viewAdditionalNote" class="bg-gray-50 p-3 rounded-lg border border-gray-200"></div>
+                    </div>
+                    
+                    <!-- 图片显示 -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">图片预览</label>
+                        <div id="viewAdditionalImage" class="bg-gray-50 p-3 rounded-lg border border-gray-200 min-h-40 flex items-center justify-center">
+                            <p class="text-gray-500">无图片</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="window.appInstance.modalManager.hideModal('viewAdditionalDataModal')">关闭</button>
+            </div>
+        </div>
+    </div>
 
 
     <!-- 弹窗组件 -->
@@ -1407,7 +1512,7 @@
                                         <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-medium text-sm shadow-sm">4</div>
                                         <div class="flex-1">
                                             <h3 class="font-semibold text-gray-900 mb-1">调整数据项</h3>
-                                            <p class="text-gray-600">点击数据项后的编辑按钮，调整时间或费用，系统会自动计算关联数据</p>
+                                            <p class="text-gray-600">右键点击数据项，在菜单中选择"编辑"或"删除"进行操作，系统会自动计算关联数据</p>
                                         </div>
                                     </li>
                                     <li class="flex gap-4">
@@ -1437,6 +1542,11 @@
                                         <i class="fas fa-users text-2xl"></i>
                                     </div>
                                     <h3 class="text-xl font-semibold text-gray-900 mb-3">学生管理</h3>
+                                    <div class="mb-3 text-sm text-gray-600">
+                                        <strong>使用说明</strong>：
+                                        <br>• 添加：点击"添加"按钮
+                                        <br>• 编辑/删除：右键点击学生行，在菜单中选择对应操作
+                                    </div>
                                     <ul class="space-y-2">
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
@@ -1491,6 +1601,43 @@
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
                                             <span>复制最后一项功能：快速复制最后一条数据项，自动更新时间</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- 附加数据 -->
+                                <div class="feature-card bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                                    <div class="feature-icon w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-4 shadow-sm">
+                                        <i class="fas fa-plus-circle text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-3">附加数据</h3>
+                                    <div class="mb-3 text-sm text-gray-600">
+                                        <strong>使用步骤</strong>：点击"添加附加数据" → 选择目标行 → 填写备注/上传图片 → 保存
+                                    </div>
+                                    <ul class="space-y-2">
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>为数据项添加备注信息</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>上传图片附件（支持JPG、PNG、GIF，最大16MB）</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>已添加附加数据的行显示红色左侧边框和红色角色名</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>右键数据行可查看附加数据</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>支持撤销/重做操作</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>附加数据包含在导入导出中</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -1810,6 +1957,10 @@
                                 <div class="mb-6">
                                     <h3 class="text-lg font-semibold text-gray-900 mb-3">其他技巧</h3>
                                     <ul class="space-y-2">
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span><strong>右键菜单</strong>：右键点击数据项可以打开菜单，选择"编辑"或"删除"进行操作</span>
+                                        </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
                                             <span><strong>修改学生</strong>：修改学生属性后，系统会自动重新计算相关数据</span>
@@ -2145,7 +2296,7 @@
                 <div class="text-center mb-4">
                     <img src="https://q1.qlogo.cn/g?b=qq&nk=1441736707&s=100" alt="作者头像" class="w-20 h-20 rounded-full mb-2 border-2 border-primary">
                     <h4 class="text-xl font-bold">碧蓝档案轴计算器</h4>
-                    <p class="text-gray-500">版本 2.0.0</p>
+                    <p class="text-gray-500">版本 2.1.3</p>
                 </div>
                 <p class="text-center mb-4">一款用于管理游戏学生属性、精准计算技能费用与回费时间的工具，帮助玩家高效规划游戏内学生技能释放节奏。</p>
                 <div class="text-center mb-4">

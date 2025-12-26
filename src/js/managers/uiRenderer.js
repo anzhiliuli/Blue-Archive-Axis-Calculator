@@ -29,7 +29,7 @@ class UIRenderer {
             if (characters.length === 0) {
                 characterList.innerHTML = `
                     <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
+                        <td colspan="5" class="text-center py-4 text-muted">
                             暂无学生数据
                             <button id="add-character-btn" class="btn btn-primary btn-sm ml-2">
                                 <i class="fas fa-plus"></i> 添加学生
@@ -47,14 +47,6 @@ class UIRenderer {
                     <td>${character.skillCost.toFixed(2)}</td>
                     <td>${character.costIncrease.toFixed(2)}</td>
                     <td>${character.isChargePercentage ? '<span class="text-success font-bold">√</span>' : '-'}</td>
-                    <td class="flex gap-2 justify-center">
-                        <button class="edit-character p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors duration-200" data-id="${character.id}" title="编辑">
-                            <i class="fas fa-pen text-sm"></i>
-                        </button>
-                        <button class="delete-character p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors duration-200" data-id="${character.id}" title="删除">
-                            <i class="fas fa-trash text-sm"></i>
-                        </button>
-                    </td>
                 </tr>
             `).join('');
         }
@@ -241,7 +233,7 @@ class UIRenderer {
             if (totalItems === 0) {
                 dataItemList.innerHTML = `
                     <tr>
-                        <td colspan="7" class="text-center py-4 text-muted">
+                        <td colspan="8" class="text-center py-4 text-muted">
                             暂无数据项
                             <button id="add-data-item-btn" class="btn btn-primary btn-sm ml-2">
                                 <i class="fas fa-plus"></i> 添加数据项
@@ -268,7 +260,6 @@ class UIRenderer {
                             <td>${item.timeInterval.toFixed(3)} s</td>
                             <td>${item.costDeduction.toFixed(2)} c</td>
                             <td>${item.remainingCost.toFixed(2)} c</td>
-                            <td>-</td>
                         </tr>
                     `;
                 }
@@ -290,11 +281,6 @@ class UIRenderer {
                             <td>${item.timeInterval.toFixed(2)}</td>
                             <td>${costChange}${item.costDeduction.toFixed(2)}</td>
                             <td>${item.remainingCost.toFixed(2)}</td>
-                            <td class="flex gap-2 justify-center">
-                                <button class="delete-data-item p-2 rounded-full bg-red-100 text-red-700 border border-red-300 hover:bg-red-200 transition-colors duration-200" data-id="${item.id}" title="删除">
-                                    <i class="fas fa-trash text-sm"></i>
-                                </button>
-                            </td>
                         </tr>
                     `;
                 }
@@ -315,14 +301,6 @@ class UIRenderer {
                         <td>${item.timeInterval.toFixed(2)}</td>
                         <td>${costChange}${item.costDeduction.toFixed(2)}</td>
                         <td>${item.remainingCost.toFixed(2)}</td>
-                        <td class="flex gap-2 justify-center">
-                            <button class="edit-data-item p-2 rounded-full hover:bg-blue-100 text-blue-600 transition-colors duration-200" data-id="${item.id}" title="编辑">
-                                <i class="fas fa-pen text-sm"></i>
-                            </button>
-                            <button class="delete-data-item p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors duration-200" data-id="${item.id}" title="删除">
-                                <i class="fas fa-trash text-sm"></i>
-                            </button>
-                        </td>
                     </tr>
                 `;
             });
@@ -351,9 +329,18 @@ class UIRenderer {
         const totalItems = this.dataManager.getDataItems().length;
         const currentPage = this.dataManager.getCurrentPage();
         const totalPages = this.dataManager.getTotalPages();
+        const showCompleteData = this.dataManager.getShowCompleteData();
         
         // 获取分页容器
         let paginationContainer = document.getElementById('dataItemsPagination');
+        
+        // 如果显示完整数据，移除分页控件并返回
+        if (showCompleteData) {
+            if (paginationContainer) {
+                paginationContainer.remove();
+            }
+            return;
+        }
         
         // 如果只有一页数据，移除分页控件并返回
         if (totalPages <= 1) {
