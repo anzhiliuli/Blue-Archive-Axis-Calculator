@@ -2114,12 +2114,15 @@ class EventListeners {
         const timeInterval = previousItemTime - timeInSeconds;
         const recoveredCost = this.calculateCostRecoveryFromInterval(timeInterval, previousItemTime);
         
-        // 计算新费用
+        // 计算新费用（使用精确值，不四舍五入）
         const newCost = previousRemainingCost + recoveredCost;
         const calculatedCost = Math.max(newCost, 0); // 确保费用不小于0
         
-        // 更新费用输入框
+        // 更新费用输入框，显示两位小数（仅用于UI显示）
         document.getElementById('editTriggerCost').value = calculatedCost.toFixed(2);
+        
+        // 同时更新原始数据项的费用，保存精确值
+        originalItem.cost = calculatedCost;
     }
     
     // 从费用计算时间
@@ -2150,6 +2153,9 @@ class EventListeners {
             const previousItem = allItems[currentIndex - 1];
             previousRemainingCost = previousItem.remainingCost;
         }
+        
+        // 保存精确的费用值到原始数据项
+        originalItem.cost = costValue;
         
         // 计算所需费用差：目标费用 - 上一个数据项的剩余费用
         const requiredCost = costValue - previousRemainingCost;
@@ -2412,7 +2418,8 @@ class EventListeners {
             characterId: characterId,
             action: action,
             time: timeInSeconds,
-            cost: inputCost
+            // 使用原始数据的精确费用值，而不是从UI输入框获取格式化后的值
+            cost: originalItem.cost
         };
 
         // 验证表单数据
