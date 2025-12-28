@@ -318,6 +318,9 @@ class EventListeners {
                 // 确保第一个数据项的时间间隔计算正确
                 this.calculator.recalculateAllItems();
                 
+                // 刷新UI，确保所有更改都能正确显示
+                this.uiRenderer.refreshAll();
+                
                 this.modalManager.hideAllModals();
                 this.modalManager.showToast(`已成功初始化，初始时间：${initialTimeStr}`, 'success');
             });
