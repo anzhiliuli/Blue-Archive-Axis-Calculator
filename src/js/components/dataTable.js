@@ -396,6 +396,12 @@ class DataTable {
         
         // 重新绑定右键菜单事件（因为tbody和数据行已重新创建）
         this.bindContextMenuEvents();
+        
+        // 表格重新渲染后，恢复游戏模式视图的列隐藏状态
+        // 检查是否存在全局的游戏模式状态
+        if (window.appInstance && window.appInstance.eventListeners && window.appInstance.eventListeners.isGameModeActive) {
+            window.appInstance.eventListeners.toggleGameModeColumns(window.appInstance.eventListeners.isGameModeActive);
+        }
     }
 
     /**

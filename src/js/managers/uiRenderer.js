@@ -1033,6 +1033,10 @@ class UIRenderer {
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
                     plugins: {
                         legend: {
                             position: 'top',
@@ -1058,6 +1062,33 @@ class UIRenderer {
                                 label: function(context) {
                                     return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}c`;
                                 }
+                            }
+                        },
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x',
+                                limits: {
+                                    x: { min: 0, max: 100 },
+                                    y: { min: 0, max: 10 }
+                                },
+                                onZoom: function({ chart }) {
+                                    // Ensure all data is visible when fully zoomed out
+                                    const scale = chart.scales.x;
+                                    if (Math.abs(scale.max - scale.min) >= chart.data.labels.length - 1) {
+                                        // Reset to show all data
+                                        chart.resetZoom();
+                                    }
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
                             }
                         }
                     },

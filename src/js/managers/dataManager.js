@@ -553,7 +553,8 @@ class DataManager {
             pageSize: this.pageSize,
             exportInfo: this.exportInfo, // 新增：导出信息
             exportedAt: new Date().toISOString(),
-            version: '1.0.0'
+            version: '1.0.0',
+            fileName: `碧蓝档案轴-数据-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}` // 添加默认文件名
         };
     }
 

@@ -18,6 +18,8 @@
     
     <!-- Chart.js v4+（最新稳定版，推荐新项目） -->
     <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.5.0/chart.umd.js"></script>
+    <!-- Chart.js Zoom Plugin -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
     
     <!-- 导航栏滚动效果脚本 -->
     <script>
@@ -442,6 +444,10 @@
                         <button id="toggleSpecialRowsBtn" class="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 transition-colors duration-200">
                             <i class="fas fa-eye-slash"></i> 隐藏特殊行
                         </button>
+                        <!-- 游戏模式视图按钮 -->
+                        <button id="gameModeViewBtn" class="text-sm px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 transition-colors duration-200 hidden">
+                            <i class="fas fa-gamepad"></i> 游戏模式视图
+                        </button>
                         <!-- 学生站位信息 -->
                         <span id="positionsInfo" class="text-sm text-gray-600"></span>
                     </div>
@@ -533,6 +539,13 @@
                 <div class="space-y-4">
                     <div id="exportOptions" class="hidden">
                             <h6 class="font-medium mb-2">选择导出方式</h6>
+                            
+                            <!-- 文件名输入 -->
+                            <div class="mb-4">
+                                <label for="exportFileName" class="block text-sm font-medium mb-2">数据文件名</label>
+                                <input type="text" id="exportFileName" class="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="输入数据文件名（选填）">
+                                <p class="text-xs text-gray-500 mt-1">不填写则使用默认文件名</p>
+                            </div>
                             
                             <!-- 导出信息配置 -->
                             <div id="exportConfigInfo" class="bg-gray-50 p-4 rounded-lg mb-4 hidden">
@@ -655,7 +668,7 @@
     <!-- 页脚 -->
     <footer class="bg-white shadow-inner py-4">
         <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
-            <p>© 2025 碧蓝档案轴计算器 | 版本 2.1.3</p>
+            <p>© 2025 碧蓝档案轴计算器 | 版本 2.1.5</p>
         </div>
     </footer>
 
@@ -954,6 +967,7 @@
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">费用数值</label>
                             <input type="number" id="ciValue" name="ciValue" class="input-field w-full" step="0.001">
+                            <p class="text-xs text-gray-500 mt-1">提示：需要将技能描述中的数值除以10000填入</p>
                         </div>
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">效果类型</label>
@@ -1774,6 +1788,10 @@
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>费用曲线支持鼠标滚轮缩放，缩放到最小时显示所有数据</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
                                             <span>支持时间格式自动转换</span>
                                         </li>
                                         <li class="flex items-start gap-2 text-gray-700">
@@ -1791,6 +1809,35 @@
                                         <li class="flex items-start gap-2 text-gray-700">
                                             <i class="fas fa-check text-green-500 mt-1"></i>
                                             <span>站位信息和初始技能分行显示区分清晰</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <!-- 游戏模式视图 -->
+                                <div class="feature-card bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                    <div class="feature-icon w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-4">
+                                        <i class="fas fa-gamepad text-2xl"></i>
+                                    </div>
+                                    <h3 class="text-xl font-semibold text-gray-900 mb-3">游戏模式视图</h3>
+                                    <div class="mb-3 text-sm text-gray-600">
+                                        <strong>使用步骤</strong>：点击顶部的"游戏模式视图"按钮 → 系统自动切换到游戏模式 → 点击"显示完整数据"恢复默认视图
+                                    </div>
+                                    <ul class="space-y-2">
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>切换到游戏模式视图，优化界面布局</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>自动调整列宽，隐藏不必要的列，显示游戏中更关注的信息</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>保持数据完整性，切换视图不影响数据计算</span>
+                                        </li>
+                                        <li class="flex items-start gap-2 text-gray-700">
+                                            <i class="fas fa-check text-green-500 mt-1"></i>
+                                            <span>支持一键恢复默认视图，操作便捷</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -2104,7 +2151,7 @@
                                                     <i class="fas fa-check text-green-500 mt-1"></i>
                                                     <span><strong>费用效果</strong>：调整回费效果，可设置时间范围和作用对象：
                                                         <ul class="list-disc pl-5 mt-1 space-y-1">
-                                                            <li><strong>固定数值</strong>：直接增加或减少指定学生的回费速度，会受到启用回费的百分比加成影响</li>
+                                                            <li><strong>固定数值</strong>：直接增加或减少指定学生的回费速度，会受到启用回费的百分比加成影响<br>注意：需要将技能描述中的数值除以10000填入，例如技能描述中的684对应0.0684</li>
                                                             <li><strong>百分比</strong>：增加或减少回费百分比，与学生属性中的启用回费百分比累加</li>
                                                             <li><strong>作用范围</strong>：可选择单个或多个学生应用效果</li>
                                                             <li><strong>时间范围</strong>：在指定的生效时间和持续时长内有效</li>
@@ -2296,7 +2343,7 @@
                 <div class="text-center mb-4">
                     <img src="https://q1.qlogo.cn/g?b=qq&nk=1441736707&s=100" alt="作者头像" class="w-20 h-20 rounded-full mb-2 border-2 border-primary">
                     <h4 class="text-xl font-bold">碧蓝档案轴计算器</h4>
-                    <p class="text-gray-500">版本 2.1.3</p>
+                    <p class="text-gray-500">版本 2.1.5</p>
                 </div>
                 <p class="text-center mb-4">一款用于管理游戏学生属性、精准计算技能费用与回费时间的工具，帮助玩家高效规划游戏内学生技能释放节奏。</p>
                 <div class="text-center mb-4">
@@ -2449,7 +2496,7 @@
                     <div class="form-group mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">增加回费速度 (c/s)</label>
                         <input type="number" id="recoveryIncrease" class="input-field w-full" min="0" step="0.001" placeholder="0.000" required>
-                        <p class="text-xs text-gray-500 mt-1">直接增加到总回费速度中</p>
+                        <p class="text-xs text-gray-500 mt-1">需要将技能描述中的数值除以10000填入<br>比如水星684就是0.0684</p>
                     </div>
                     
                     <!-- 按钮组 -->

@@ -827,6 +827,20 @@ class EventListeners {
                     // 更新按钮文本
                     showCompleteDataBtn.innerHTML = '<i class="fas fa-table"></i> 恢复默认视图';
                     this.modalManager.showToast('已显示完整数据', 'success');
+                    
+                    // 显示游戏模式视图按钮
+                    const gameModeBtn = document.getElementById('gameModeViewBtn');
+                    if (gameModeBtn) {
+                        gameModeBtn.classList.remove('hidden');
+                        // 重置游戏模式按钮状态，确保显示正确的文本和样式
+                        gameModeBtn.innerHTML = '<i class="fas fa-gamepad"></i> 游戏模式视图';
+                        gameModeBtn.classList.remove('bg-primary', 'hover:bg-primary/80', 'text-white');
+                        gameModeBtn.classList.add('bg-gray-100', 'hover:bg-gray-200');
+                        // 重置游戏模式状态
+                        this.isGameModeActive = false;
+                        // 确保所有列可见
+                        this.restoreAllColumns();
+                    }
                 } else {
                     // 显示其他元素
                     addItemSection.style.display = 'block';
@@ -836,10 +850,46 @@ class EventListeners {
                     // 更新按钮文本
                     showCompleteDataBtn.innerHTML = '<i class="fas fa-table"></i> 显示完整数据';
                     this.modalManager.showToast('已恢复默认视图', 'success');
+                    
+                    // 隐藏游戏模式视图按钮
+                    const gameModeBtn = document.getElementById('gameModeViewBtn');
+                    if (gameModeBtn) {
+                        gameModeBtn.classList.add('hidden');
+                        // 恢复所有列的可见性
+                        this.restoreAllColumns();
+                        // 重置游戏模式状态
+                        this.isGameModeActive = false;
+                    }
                 }
                 
                 // 刷新UI
                 this.uiRenderer.refreshAll();
+            });
+        }
+        
+        // 游戏模式视图按钮
+        const gameModeViewBtn = document.getElementById('gameModeViewBtn');
+        if (gameModeViewBtn) {
+            // 初始化游戏模式状态
+            this.isGameModeActive = false;
+            
+            gameModeViewBtn.addEventListener('click', () => {
+                // 切换游戏模式状态
+                this.isGameModeActive = !this.isGameModeActive;
+                
+                // 控制指定列的可见性
+                this.toggleGameModeColumns(this.isGameModeActive);
+                
+                // 更新按钮样式和文本
+                if (this.isGameModeActive) {
+                    gameModeViewBtn.innerHTML = '<i class="fas fa-eye-slash"></i> 关闭游戏模式';
+                    gameModeViewBtn.classList.remove('bg-gray-100', 'hover:bg-gray-200');
+                    gameModeViewBtn.classList.add('bg-primary', 'hover:bg-primary/80', 'text-white');
+                } else {
+                    gameModeViewBtn.innerHTML = '<i class="fas fa-gamepad"></i> 游戏模式视图';
+                    gameModeViewBtn.classList.remove('bg-primary', 'hover:bg-primary/80', 'text-white');
+                    gameModeViewBtn.classList.add('bg-gray-100', 'hover:bg-gray-200');
+                }
             });
         }
         
@@ -2080,6 +2130,112 @@ class EventListeners {
         this.handleCharacterChange = null;
     }
     
+    // 切换游戏模式下的列可见性
+    toggleGameModeColumns(isActive) {
+        const table = document.getElementById('dataItemsTable');
+        if (!table) return;
+        
+        // 获取表格的表头和所有数据行
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+        
+        if (!thead || !tbody) return;
+        
+        // 获取表头行
+        const headerRow = thead.querySelector('tr');
+        if (!headerRow) return;
+        
+        // 获取所有表头单元格
+        const headerCells = Array.from(headerRow.querySelectorAll('th'));
+        
+        // 定义要隐藏的列名（根据field名匹配）
+        const columnsToHide = ['timeInterval', 'costDeduction', 'remainingCost'];
+        
+        // 定义要隐藏的列索引
+        const columnsToHideIndexes = [];
+        
+        // 找到要隐藏的列索引
+        headerCells.forEach((cell, index) => {
+            const field = cell.dataset.field;
+            if (columnsToHide.includes(field)) {
+                columnsToHideIndexes.push(index);
+            }
+        });
+        
+        // 控制表头列的可见性
+        columnsToHideIndexes.forEach(index => {
+            const headerCell = headerCells[index];
+            if (headerCell) {
+                headerCell.style.display = isActive ? 'none' : '';
+            }
+        });
+        
+        // 控制数据行中对应列的可见性
+        const dataRows = tbody.querySelectorAll('tr');
+        dataRows.forEach(row => {
+            const cells = Array.from(row.querySelectorAll('td'));
+            columnsToHideIndexes.forEach(index => {
+                const cell = cells[index];
+                if (cell) {
+                    cell.style.display = isActive ? 'none' : '';
+                }
+            });
+        });
+    }
+    
+    // 恢复所有列的可见性
+    restoreAllColumns() {
+        const table = document.getElementById('dataItemsTable');
+        if (!table) return;
+        
+        // 获取表格的表头和所有数据行
+        const thead = table.querySelector('thead');
+        const tbody = table.querySelector('tbody');
+        
+        if (!thead || !tbody) return;
+        
+        // 获取表头行
+        const headerRow = thead.querySelector('tr');
+        if (!headerRow) return;
+        
+        // 获取所有表头单元格
+        const headerCells = Array.from(headerRow.querySelectorAll('th'));
+        
+        // 定义要恢复的列名
+        const columnsToRestore = ['timeInterval', 'costDeduction', 'remainingCost'];
+        
+        // 定义要恢复的列索引
+        const columnsToRestoreIndexes = [];
+        
+        // 找到要恢复的列索引
+        headerCells.forEach((cell, index) => {
+            const field = cell.dataset.field;
+            if (columnsToRestore.includes(field)) {
+                columnsToRestoreIndexes.push(index);
+            }
+        });
+        
+        // 恢复表头列的可见性
+        columnsToRestoreIndexes.forEach(index => {
+            const headerCell = headerCells[index];
+            if (headerCell) {
+                headerCell.style.display = '';
+            }
+        });
+        
+        // 恢复数据行中对应列的可见性
+        const dataRows = tbody.querySelectorAll('tr');
+        dataRows.forEach(row => {
+            const cells = Array.from(row.querySelectorAll('td'));
+            columnsToRestoreIndexes.forEach(index => {
+                const cell = cells[index];
+                if (cell) {
+                    cell.style.display = '';
+                }
+            });
+        });
+    }
+    
     // 从时间计算费用
     calculateCostFromTime() {
         // 获取表单数据
@@ -2563,6 +2719,9 @@ class EventListeners {
             
             // 更新学生下拉菜单选项
             this.updateCharacterSelectsInExportModal();
+            
+            // 填充当前的导出信息到表单中
+            this.fillExportInfoToForm();
         } else {
             title.textContent = '导入数据';
             exportOptions.classList.add('hidden');
@@ -2609,6 +2768,52 @@ class EventListeners {
         
         // 添加视频轴链接解析功能
         this.addVideoAxisLinkParser();
+    }
+    
+    // 填充当前的导出信息到表单中
+    fillExportInfoToForm() {
+        // 获取当前的导出信息
+        const exportInfo = this.dataManager.exportInfo;
+        
+        // 填充站位信息
+        for (let i = 0; i < 4; i++) {
+            const select = document.getElementById(`position${i + 1}`);
+            const positionValue = exportInfo.positions && exportInfo.positions[i] ? exportInfo.positions[i] : '';
+            if (select) {
+                select.value = positionValue;
+            }
+        }
+        
+        // 填充初始技能信息
+        for (let i = 0; i < 3; i++) {
+            const select = document.getElementById(`initialSkill${i + 1}`);
+            const skillValue = exportInfo.initialSkills && exportInfo.initialSkills[i] ? exportInfo.initialSkills[i] : '';
+            if (select) {
+                select.value = skillValue;
+            }
+        }
+        
+        // 填充视频轴链接
+        const videoAxisLinkInput = document.getElementById('videoAxisLink');
+        if (videoAxisLinkInput) {
+            videoAxisLinkInput.value = exportInfo.videoAxisLink || '';
+        }
+        
+        // 添加提示信息，告诉用户可以替换这些值
+        const toggleExportConfigBtn = document.getElementById('toggleExportConfigBtn');
+        if (toggleExportConfigBtn) {
+            // 移除现有的提示元素
+            const existingHint = toggleExportConfigBtn.parentElement.querySelector('.export-info-hint');
+            if (existingHint) {
+                existingHint.remove();
+            }
+            
+            // 创建新的提示元素
+            const hintElement = document.createElement('div');
+            hintElement.className = 'export-info-hint text-xs text-gray-600 mt-2';
+            hintElement.textContent = '如需更改视频轴、站位、初始技能，请更改导出信息';
+            toggleExportConfigBtn.parentElement.appendChild(hintElement);
+        }
     }
     
     // 添加学生站位唯一性检查
@@ -2796,17 +3001,32 @@ class EventListeners {
         this.saveExportInfo();
         
         const data = this.dataManager.exportData();
+        
+        // 获取用户输入的文件名
+        const customFileName = document.getElementById('exportFileName')?.value?.trim();
+        
+        // 优先使用用户输入的文件名，否则使用默认文件名
+        const fileName = customFileName || data.fileName || `blue-archive-calculator-data-${new Date().toISOString().slice(0, 10)}`;
+        
+        // 更新数据对象中的文件名
+        data.fileName = fileName;
+        
         const dataStr = JSON.stringify(data, null, 2);
         const dataBlob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(dataBlob);
         
         const link = document.createElement('a');
         link.href = url;
-        link.download = `blue-archive-calculator-data-${new Date().toISOString().slice(0, 10)}.json`;
+        link.download = `${fileName}.json`;
         link.click();
         
         URL.revokeObjectURL(url);
         this.modalManager.showToast('数据导出成功', 'success');
+        
+        // 清空文件名输入框
+        if (document.getElementById('exportFileName')) {
+            document.getElementById('exportFileName').value = '';
+        }
     }
     
     // 从文件导入数据
@@ -2849,6 +3069,15 @@ class EventListeners {
             // 获取要导出的数据
             const data = this.dataManager.exportData();
             
+            // 获取用户输入的文件名
+            const customFileName = document.getElementById('exportFileName')?.value?.trim();
+            
+            // 优先使用用户输入的文件名，否则使用默认文件名
+            const fileName = customFileName || data.fileName || `碧蓝档案轴-识别码-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}`;
+            
+            // 更新数据对象中的文件名
+            data.fileName = fileName;
+            
             // 调用API生成识别码
             const shareId = await AppUtils.api.generateShareId(data);
             
@@ -2867,6 +3096,11 @@ class EventListeners {
                 shareIdDisplayGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
                 this.modalManager.showToast('识别码生成成功', 'success');
+            }
+            
+            // 清空文件名输入框
+            if (document.getElementById('exportFileName')) {
+                document.getElementById('exportFileName').value = '';
             }
         } catch (error) {
             // 隐藏加载指示器
@@ -2909,30 +3143,44 @@ class EventListeners {
             // 调用API获取共享数据
             const data = await AppUtils.api.getShareData(shareId);
             
-            // 导入数据
-            const success = this.dataManager.importData(data);
-            
             // 隐藏加载指示器
             this.modalManager.hideLoadingIndicator();
             
-            // 关闭模态框
+            // 关闭导入模态框
             this.modalManager.hideModal('importExportModal');
             
-            if (success) {
-                // 设置数据表为已初始化状态
-                if (this.app) {
-                    this.app.setDataTableInitialized(true);
+            // 获取数据文件名，优先使用数据中的fileName字段，否则使用识别码作为文件名
+            const dataFileName = data.fileName || `识别码-${shareId}`;
+            
+            // 显示确认导入提示
+            this.modalManager.showConfirmModal(
+                '确认导入',
+                `您正在导入的数据文件名为：${dataFileName}，确定要导入此数据吗？导入后当前数据将被覆盖。`,
+                () => {
+                    // 用户确认导入
+                    const success = this.dataManager.importData(data);
+                    
+                    if (success) {
+                        // 设置数据表为已初始化状态
+                        if (this.app) {
+                            this.app.setDataTableInitialized(true);
+                        }
+                        
+                        // 重新计算所有数据项
+                        this.calculator.recalculateAllItems();
+                        
+                        this.modalManager.showToast('数据导入成功', 'success');
+                        // 刷新界面
+                        this.uiRenderer.refreshAll();
+                    } else {
+                        this.modalManager.showToast('数据导入失败，数据格式不正确', 'error');
+                    }
+                },
+                () => {
+                    // 用户取消导入
+                    this.modalManager.showToast('已取消导入', 'info');
                 }
-                
-                // 重新计算所有数据项
-                this.calculator.recalculateAllItems();
-                
-                this.modalManager.showToast('数据导入成功', 'success');
-                // 刷新界面
-                this.uiRenderer.refreshAll();
-            } else {
-                this.modalManager.showToast('数据导入失败，数据格式不正确', 'error');
-            }
+            );
         } catch (error) {
             // 隐藏加载指示器
             this.modalManager.hideLoadingIndicator();
@@ -2966,25 +3214,41 @@ class EventListeners {
         reader.onload = (event) => {
             try {
                 const data = JSON.parse(event.target.result);
-                const success = this.dataManager.importData(data);
                 
-                if (success) {
-                    // 设置数据表为已初始化状态
-                    if (this.app) {
-                        this.app.setDataTableInitialized(true);
+                // 获取数据文件名，优先使用数据中的fileName字段，否则使用文件的原始名称
+                const dataFileName = data.fileName || file.name.replace('.json', '');
+                
+                // 显示确认导入提示
+                this.modalManager.showConfirmModal(
+                    '确认导入',
+                    `您正在导入的数据文件名为：${dataFileName}，确定要导入此数据吗？导入后当前数据将被覆盖。`,
+                    () => {
+                        // 用户确认导入
+                        const success = this.dataManager.importData(data);
+                        
+                        if (success) {
+                            // 设置数据表为已初始化状态
+                            if (this.app) {
+                                this.app.setDataTableInitialized(true);
+                            }
+                            
+                            // 重新计算所有数据项
+                            this.calculator.recalculateAllItems();
+                            
+                            // 刷新UI
+                            this.uiRenderer.refreshAll();
+                            
+                            // 显示成功提示
+                            this.modalManager.showToast('数据导入成功', 'success');
+                        } else {
+                            this.modalManager.showToast('数据导入失败', 'error');
+                        }
+                    },
+                    () => {
+                        // 用户取消导入
+                        this.modalManager.showToast('已取消导入', 'info');
                     }
-                    
-                    // 重新计算所有数据项
-                    this.calculator.recalculateAllItems();
-                    
-                    // 刷新UI
-                    this.uiRenderer.refreshAll();
-                    
-                    // 显示成功提示
-                    this.modalManager.showToast('数据导入成功', 'success');
-                } else {
-                    this.modalManager.showToast('数据导入失败', 'error');
-                }
+                );
             } catch (error) {
                 console.error('数据解析失败:', error);
                 this.modalManager.showToast('数据文件格式错误', 'error');
