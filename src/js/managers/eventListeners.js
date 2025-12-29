@@ -3137,14 +3137,8 @@ class EventListeners {
     // 从识别码导入数据
     async importDataByShareId(shareId) {
         try {
-            // 显示加载指示器
-            this.modalManager.showLoadingIndicator('正在从识别码导入数据...');
-            
             // 调用API获取共享数据
             const data = await AppUtils.api.getShareData(shareId);
-            
-            // 隐藏加载指示器
-            this.modalManager.hideLoadingIndicator();
             
             // 关闭导入模态框
             this.modalManager.hideModal('importExportModal');
@@ -3182,9 +3176,6 @@ class EventListeners {
                 }
             );
         } catch (error) {
-            // 隐藏加载指示器
-            this.modalManager.hideLoadingIndicator();
-            
             // 关闭模态框
             this.modalManager.hideModal('importExportModal');
             
