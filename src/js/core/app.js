@@ -133,11 +133,11 @@ class App {
                 return item.cost.toFixed(2);
             }},
             { field: 'timeInterval', title: '时间间隔', sortable: true, render: (item) => {
-                // 初始化行时间间隔特殊格式化
+                // 时间间隔显示3位小数
                 if (item.action === '初始化') {
                     return item.timeInterval.toFixed(3) + ' s';
                 }
-                return item.timeInterval.toFixed(2);
+                return item.timeInterval.toFixed(3);
             }},
             { field: 'costDeduction', title: '费用扣除', sortable: true, render: (item) => {
                 // 初始化行特殊格式化
@@ -167,6 +167,20 @@ class App {
                     radio.addEventListener('change', (e) => {
                         // 保存选中的目标行ID
                         window.selectedTargetRowId = parseInt(e.target.value);
+                        
+                        // 获取选中的数据项
+                        const dataItem = this.dataManager.dataItems.find(item => item.id === window.selectedTargetRowId);
+                        if (dataItem) {
+                            // 计算当前时间点的回费速度
+                            const currentTime = dataItem.time;
+                            const totalRecoveryRate = this.calculator.calculateTotalRecoveryRate(currentTime);
+                            
+                            // 显示回费速度
+                            const speedElement = document.getElementById('currentChargeSpeed');
+                            if (speedElement) {
+                                speedElement.textContent = `${totalRecoveryRate.toFixed(4)} c/s`;
+                            }
+                        }
 
                     });
                 });

@@ -472,6 +472,174 @@ class EventListeners {
         modal.classList.add('show'); // 添加show类以触发CSS显示效果
         modal.style.display = 'flex'; // 确保显示，因为ModalManager会设置display: none
     }
+    
+    // 显示回费速度详情
+    showChargeSpeedDetail() {
+        // 获取当前选中的数据项
+        if (!window.selectedTargetRowId) {
+            this.modalManager.showToast('请先选择一行数据', 'warning');
+            return;
+        }
+        
+        const dataItem = this.dataManager.dataItems.find(item => item.id === window.selectedTargetRowId);
+        if (!dataItem) {
+            this.modalManager.showToast('选中的数据项不存在', 'error');
+            return;
+        }
+        
+        const currentTime = dataItem.time;
+        const characters = this.dataManager.getCharacters();
+        
+        // 计算每个学生的回费速度和详细影响因素
+        const studentDetails = [];
+        let totalSpeed = 0;
+        
+        characters.forEach(char => {
+            // 获取基础速度
+            const baseSpeed = char.costRecoveryRate;
+            
+            // 计算调整后的速度
+            const adjustedSpeed = this.calculator.applyChargeIncreaseRules(char.id, baseSpeed, currentTime);
+            
+            // 分析影响因素
+            const factors = [];
+            
+            // 1. 检查全局回费增加属性
+            const chargeIncreaseCharacter = characters.find(c => c.isChargePercentage);
+            if (chargeIncreaseCharacter) {
+                const percentageIncrease = chargeIncreaseCharacter.costIncrease;
+                if (percentageIncrease > 0) {
+                    factors.push(`全局回费增加: +${percentageIncrease}%`);
+                }
+            }
+            
+            // 2. 检查费用效果规则
+            const rules = this.dataManager.getRules();
+            const chargeIncreaseRules = rules.filter(rule => {
+                return rule.type === 'chargeIncrease' && 
+                       Array.isArray(rule.targetCharacterIds) && 
+                       rule.targetCharacterIds.includes(char.id);
+            });
+            
+            let currentTimeInSeconds = currentTime;
+            if (typeof currentTime === 'string') {
+                const [currMinutes, currSeconds] = currentTime.split(':');
+                currentTimeInSeconds = parseInt(currMinutes) * 60 + parseFloat(currSeconds);
+            }
+            
+            const activeRules = chargeIncreaseRules.filter(rule => {
+                return !currentTime || 
+                       (currentTimeInSeconds >= rule.activationTime - rule.duration && 
+                        currentTimeInSeconds < rule.activationTime);
+            });
+            
+            activeRules.forEach(rule => {
+                const effect = rule.effectType === 'increase' ? '+' : '-';
+                const value = rule.chargeValue;
+                const unit = rule.chargeType === 'percentage' ? '%' : ' c/s';
+                factors.push(`${rule.effectType === 'increase' ? '增加' : '减少'}${rule.chargeType === 'percentage' ? '百分比' : '固定数值'}: ${effect}${value}${unit}`);
+            });
+            
+            // 3. 检查持续回费功能
+            const continuousChargeSettings = this.dataManager.continuousChargeData;
+            if (Array.isArray(continuousChargeSettings)) {
+                const characterContinuousCharges = continuousChargeSettings.filter(continuousChargeData => {
+                    const targetItem = this.dataManager.dataItems.find(item => item.id == continuousChargeData.targetRowId);
+                    return targetItem && targetItem.characterId == char.id;
+                });
+                
+                characterContinuousCharges.sort((a, b) => {
+                    const targetItemA = this.dataManager.dataItems.find(item => item.id == a.targetRowId);
+                    const targetItemB = this.dataManager.dataItems.find(item => item.id == b.targetRowId);
+                    return targetItemB.time - targetItemA.time;
+                });
+                
+                for (const continuousChargeData of characterContinuousCharges) {
+                    const { targetRowId, delayTime, duration, recoveryIncrease } = continuousChargeData;
+                    
+                    const targetItem = this.dataManager.dataItems.find(item => item.id == targetRowId);
+                    if (targetItem) {
+                        const targetTimeSeconds = targetItem.time;
+                        const startTime = targetTimeSeconds - delayTime;
+                        const endTime = startTime - duration;
+                        
+                        if (currentTimeInSeconds >= endTime && currentTimeInSeconds < startTime) {
+                            factors.push(`持续回费: +${recoveryIncrease} c/s`);
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            studentDetails.push({
+                name: char.name,
+                baseSpeed: baseSpeed,
+                adjustedSpeed: adjustedSpeed,
+                factors: factors
+            });
+            totalSpeed += adjustedSpeed;
+        });
+        
+        // 填充详情模态框
+        document.getElementById('detailTime').textContent = this.app.utils.format.timeMMSSfff(currentTime);
+        
+        // 填充学生回费速度
+        const studentsElement = document.getElementById('detailStudents');
+        studentsElement.innerHTML = '';
+        if (studentDetails.length > 0) {
+            const div = document.createElement('div');
+            div.className = 'space-y-4';
+            
+            studentDetails.forEach(student => {
+                const studentDiv = document.createElement('div');
+                studentDiv.className = 'border-b border-gray-200 pb-3 last:border-0 last:pb-0';
+                
+                const header = document.createElement('div');
+                header.className = 'font-medium mb-1';
+                header.textContent = `${student.name}: 基础速度 ${student.baseSpeed.toFixed(4)} c/s → 调整后 ${student.adjustedSpeed.toFixed(4)} c/s`;
+                studentDiv.appendChild(header);
+                
+                if (student.factors.length > 0) {
+                    const factorsList = document.createElement('ul');
+                    factorsList.className = 'list-disc pl-5 space-y-1 text-sm text-gray-600';
+                    
+                    student.factors.forEach(factor => {
+                        const li = document.createElement('li');
+                        li.textContent = factor;
+                        factorsList.appendChild(li);
+                    });
+                    
+                    studentDiv.appendChild(factorsList);
+                } else {
+                    const noFactors = document.createElement('p');
+                    noFactors.className = 'text-sm text-gray-500';
+                    noFactors.textContent = '无额外影响因素';
+                    studentDiv.appendChild(noFactors);
+                }
+                
+                div.appendChild(studentDiv);
+            });
+            
+            studentsElement.appendChild(div);
+        } else {
+            studentsElement.textContent = '无学生数据';
+        }
+        
+        // 清空规则影响部分，因为学生回费速度中已经包含了详细的影响因素
+        const rulesElement = document.getElementById('detailRules');
+        if (rulesElement) {
+            rulesElement.innerHTML = '';
+        }
+        
+        // 填充总回费速度
+        document.getElementById('detailTotalSpeed').textContent = `${totalSpeed.toFixed(4)} c/s`;
+        
+        // 显示模态框
+        const modal = document.getElementById('chargeSpeedDetailModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+    }
 
     // 初始化通用事件监听器
     initGeneralListeners() {
@@ -1024,6 +1192,14 @@ class EventListeners {
         if (acceptConfirmBtn) {
             acceptConfirmBtn.addEventListener('click', () => {
                 this.modalManager.hideAllModals();
+            });
+        }
+        
+        // 回费速度详情按钮
+        const chargeSpeedDetailBtn = document.getElementById('chargeSpeedDetailBtn');
+        if (chargeSpeedDetailBtn) {
+            chargeSpeedDetailBtn.addEventListener('click', () => {
+                this.showChargeSpeedDetail();
             });
         }
         

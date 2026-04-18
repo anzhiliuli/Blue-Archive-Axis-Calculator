@@ -522,6 +522,25 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- 速度显示区域 -->
+            <div class="bg-gray-50 rounded-lg p-4 mt-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-medium">回费速度</h3>
+                    <button id="chargeSpeedDetailBtn" class="btn-outline text-xs py-1 px-1">
+                        <i class="fas fa-info-circle"></i> 详情
+                    </button>
+                </div>
+                <div class="space-y-3 text-sm">
+                    <div class="flex flex-col gap-2">
+                        <span class="text-gray-600">当前回费速度:</span>
+                        <span id="currentChargeSpeed" class="font-medium text-lg">-- c/s</span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        提示：选择数据行后显示对应时间的回费速度
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -765,6 +784,46 @@
             </div>
             <div class="modal-footer">
                 <button class="btn-primary" onclick="window.appInstance.modalManager.hideModal('viewAdditionalDataModal')">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 回费速度详情弹窗 -->
+    <div id="chargeSpeedDetailModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal-backdrop">
+        <div class="modal-content glass-effect max-w-2xl w-full mx-4">
+            <div class="modal-header">
+                <h3 class="text-xl font-semibold flex items-center">
+                    <i class="fas fa-info-circle text-primary mr-2"></i>回费速度计算详情
+                </h3>
+                <button class="close-modal-btn" onclick="window.appInstance.modalManager.hideModal('chargeSpeedDetailModal')">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <!-- 时间信息 -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">时间点</label>
+                        <div id="detailTime" class="bg-gray-50 p-3 rounded-lg border border-gray-200"></div>
+                    </div>
+                    
+                    <!-- 学生回费速度详情 -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">学生回费速度</label>
+                        <div id="detailStudents" class="bg-gray-50 p-3 rounded-lg border border-gray-200 max-h-60 overflow-y-auto"></div>
+                    </div>
+                    
+
+                    
+                    <!-- 总回费速度 -->
+                    <div>
+                        <label class="block text-sm font-medium mb-2">总回费速度</label>
+                        <div id="detailTotalSpeed" class="bg-gray-50 p-3 rounded-lg border border-gray-200 font-medium"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="window.appInstance.modalManager.hideModal('chargeSpeedDetailModal')">关闭</button>
             </div>
         </div>
     </div>
