@@ -18,37 +18,11 @@ class UIRenderer {
     renderCharacterList() {
         const characters = this.dataManager.getCharacters();
         
-        // 使用数据表格组件渲染学生列表
+        // 使用数据表格组件渲染学生列表（表格组件在 App.initTables() 中始终创建）
         if (this.app.tables.characters) {
             this.app.tables.characters.setData(characters);
         } else {
-            // 降级处理：如果表格组件不可用，使用传统渲染方式
-            const characterList = document.getElementById('character-list');
-            if (!characterList) return;
-
-            if (characters.length === 0) {
-                characterList.innerHTML = `
-                    <tr>
-                        <td colspan="5" class="text-center py-4 text-muted">
-                            暂无学生数据
-                            <button id="add-character-btn" class="btn btn-primary btn-sm ml-2">
-                                <i class="fas fa-plus"></i> 添加学生
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            characterList.innerHTML = characters.map(character => `
-                <tr id="character-${character.id}">
-                    <td>${character.name}</td>
-                    <td>${character.costRecoveryRate.toFixed(2)}</td>
-                    <td>${character.skillCost.toFixed(2)}</td>
-                    <td>${character.costIncrease.toFixed(2)}</td>
-                    <td>${character.isChargePercentage ? '<span class="text-success font-bold">√</span>' : '-'}</td>
-                </tr>
-            `).join('');
+            console.error('学生表格组件未初始化，无法渲染学生列表');
         }
     }
 
@@ -71,28 +45,33 @@ class UIRenderer {
         return isNegative ? `-${timeStr}` : timeStr;
     }
     
-    // 渲染关联规则列表（卡片形式）
+    // 渲染关联规则列表（卡片形式，含持续回费设置）
     renderRuleList() {
         const rules = this.dataManager.getRules();
+        const continuousCharges = Array.isArray(this.dataManager.continuousChargeData)
+            ? this.dataManager.continuousChargeData
+            : [];
         const ruleContainer = document.getElementById('rulesTable');
         if (!ruleContainer) return;
 
         const characters = this.dataManager.getCharacters();
-        
-        if (rules.length === 0) {
+        const esc = AppUtils.security.escapeHtml;
+
+        if (rules.length === 0 && continuousCharges.length === 0) {
             ruleContainer.innerHTML = `
                 <div class="text-center py-8 text-muted">
                     <i class="fas fa-info-circle text-4xl mb-4"></i>
-                    <p>暂无关联规则</p>
+                    <p>暂无关联规则或持续回费设置</p>
                 </div>
             `;
         } else {
             let cardsHTML = '';
             rules.forEach(rule => {
                 // 处理触发学生（减费效果和回费效果不需要触发学生）
+                // 注意：此处必须给外层变量赋值，不能重新声明（避免变量遮蔽导致名称恒为空）
                 let sourceCharacterText = '';
                 if (rule.characterId) {
-                   const sourceCharacterText = characters.find(c => c.id === rule.characterId)?.name || '未知学生';
+                    sourceCharacterText = esc(characters.find(c => c.id === rule.characterId)?.name || '未知学生');
                 }
                 
                 // 根据规则类型生成显示内容
@@ -107,7 +86,7 @@ class UIRenderer {
                         // 处理目标学生（使用统一的targetCharacterIds数组）
                         if (Array.isArray(rule.targetCharacterIds)) {
                             const targetNames = rule.targetCharacterIds
-                                .map(id => characters.find(c => c.id === id)?.name || '未知学生')
+                                .map(id => esc(characters.find(c => c.id === id)?.name || '未知学生'))
                                 .join(', ');
                             targetText = targetNames;
                         } else {
@@ -118,17 +97,17 @@ class UIRenderer {
                         const crTriggerItem = crDataItems.find(item => item.id === rule.characterId);
                         triggerTime = crTriggerItem ? this.formatTime(crTriggerItem.time) : '未知时间';
                         paramsHTML = `
-                            <div class="mb-1"><strong>触发时间:</strong> ${triggerTime}</div>
-                            <div class="mb-1"><strong>生效次数:</strong> ${rule.effectCount}</div>
-                            <div class="mb-1"><strong>减费数值:</strong> ${rule.reductionValue}</div>
+                            <div class="mb-1"><strong>触发时间:</strong> ${esc(triggerTime)}</div>
+                            <div class="mb-1"><strong>生效次数:</strong> ${esc(rule.effectCount)}</div>
+                            <div class="mb-1"><strong>减费数值:</strong> ${esc(rule.reductionValue)}</div>
                         `;
                         break;
                     case 'instantCharge':
                         ruleTypeText = '瞬间回费';
                         targetText = sourceCharacterText;
                         paramsHTML = `
-                            <div class="mb-1"><strong>时间点:</strong> ${this.formatTime(rule.time)}</div>
-                            <div class="mb-1"><strong>回费数值:</strong> ${rule.chargeValue}</div>
+                            <div class="mb-1"><strong>时间点:</strong> ${esc(this.formatTime(rule.time))}</div>
+                            <div class="mb-1"><strong>回费数值:</strong> ${esc(rule.chargeValue)}</div>
                         `;
                         break;
                     case 'costChange':
@@ -142,13 +121,13 @@ class UIRenderer {
                         let triggerCharacterText = '';
                         if (triggerItem) {
                             const triggerCharacter = characters.find(c => c.id === triggerItem.characterId);
-                            triggerCharacterText = triggerCharacter ? triggerCharacter.name : '未知学生';
+                            triggerCharacterText = esc(triggerCharacter ? triggerCharacter.name : '未知学生');
                         }
                         
                         paramsHTML = `
-                            <div class="mb-1"><strong>触发时间:</strong> ${triggerTime}</div>
+                            <div class="mb-1"><strong>触发时间:</strong> ${esc(triggerTime)}</div>
                             <div class="mb-1"><strong>触发学生:</strong> ${triggerCharacterText}</div>
-                            <div class="mb-1"><strong>更改数值:</strong> ${rule.changeValue}</div>
+                            <div class="mb-1"><strong>更改数值:</strong> ${esc(rule.changeValue)}</div>
                         `;
                         break;
                     case 'chargeIncrease':
@@ -156,7 +135,7 @@ class UIRenderer {
                         // 处理目标学生（多选）
                         if (Array.isArray(rule.targetCharacterIds)) {
                             const targetNames = rule.targetCharacterIds
-                                .map(id => characters.find(c => c.id === id)?.name || '未知学生')
+                                .map(id => esc(characters.find(c => c.id === id)?.name || '未知学生'))
                                 .join(', ');
                             targetText = targetNames;
                         } else {
@@ -170,10 +149,10 @@ class UIRenderer {
                         const chargeTypeText = rule.chargeType === 'percentage' ? '百分比' : '固定数值';
                         
                         paramsHTML = `
-                            <div class="mb-1"><strong>生效时间点:</strong> ${this.formatTime(rule.activationTime)}</div>
-                            <div class="mb-1"><strong>生效时间段:</strong> ${this.formatTime(rule.activationTime - rule.duration)} - ${this.formatTime(rule.activationTime)} (持续 ${rule.duration}s)</div>
+                            <div class="mb-1"><strong>生效时间点:</strong> ${esc(this.formatTime(rule.activationTime))}</div>
+                            <div class="mb-1"><strong>生效时间段:</strong> ${esc(this.formatTime(rule.activationTime - rule.duration))} - ${esc(this.formatTime(rule.activationTime))} (持续 ${esc(rule.duration)}s)</div>
                             <div class="mb-1"><strong>费用类型:</strong> ${chargeTypeText}</div>
-                            <div class="mb-1"><strong>费用数值:</strong> ${rule.chargeValue}</div>
+                            <div class="mb-1"><strong>费用数值:</strong> ${esc(rule.chargeValue)}</div>
                             <div class="mb-1"><strong>效果类型:</strong> ${effectTypeText}</div>
                         `;
                         break;
@@ -188,9 +167,9 @@ class UIRenderer {
                                 <h3 class="text-lg font-semibold text-gray-800">${ruleTypeText}</h3>
                                 <p class="text-sm text-gray-500 mt-1">
                                     ${rule.type === 'costChange' ? 
-                                            `<strong>触发时间:</strong> ${triggerTime}` : 
+                                            `<strong>触发时间:</strong> ${esc(triggerTime)}` : 
                                             rule.type === 'costReduction' ?
-                                            `<strong>触发时间:</strong> ${triggerTime} | <strong>目标学生:</strong> ${targetText}` : 
+                                            `<strong>触发时间:</strong> ${esc(triggerTime)} | <strong>目标学生:</strong> ${targetText}` : 
                                             rule.type === 'chargeIncrease' ?
                                             `<strong>作用范围:</strong> ${targetText}` :
                                             `<strong>触发学生:</strong> ${sourceCharacterText || '-'} | <strong>目标学生:</strong> ${targetText}`
@@ -209,7 +188,55 @@ class UIRenderer {
                     </div>
                 `;
             });
-            
+
+            // 持续回费卡片（紫色标识，与关联规则卡片区分）
+            const ccDataItems = this.dataManager.getDataItems();
+            continuousCharges.forEach((cc, index) => {
+                const targetItem = ccDataItems.find(item => item.id == cc.targetRowId);
+
+                let bindingText;
+                let paramsHTML;
+                if (targetItem) {
+                    const targetName = esc(characters.find(c => c.id === targetItem.characterId)?.name || '未知学生');
+                    const targetAction = esc(targetItem.action || '-');
+                    // 生效窗口：[行时间 - 延迟 - 持续, 行时间 - 延迟)
+                    const startTime = targetItem.time - cc.delayTime;
+                    const endTime = startTime - cc.duration;
+                    bindingText = `<strong>绑定行:</strong> ${targetName} - ${targetAction} @ ${esc(this.formatTime(targetItem.time))}`;
+                    paramsHTML = `
+                            <div class="mb-1"><strong>生效时间段:</strong> ${esc(this.formatTime(endTime))} - ${esc(this.formatTime(startTime))} (持续 ${esc(cc.duration)}s)</div>
+                            <div class="mb-1"><strong>延迟时间:</strong> ${esc(cc.delayTime)}s</div>
+                            <div class="mb-1"><strong>回费增加:</strong> +${esc(cc.recoveryIncrease)} c/s</div>
+                    `;
+                } else {
+                    bindingText = `<strong>绑定行:</strong> <span class="text-danger">该行已不存在，设置暂不生效</span>`;
+                    paramsHTML = `
+                            <div class="mb-1"><strong>延迟时间:</strong> ${esc(cc.delayTime)}s</div>
+                            <div class="mb-1"><strong>持续时间:</strong> ${esc(cc.duration)}s</div>
+                            <div class="mb-1"><strong>回费增加:</strong> +${esc(cc.recoveryIncrease)} c/s</div>
+                    `;
+                }
+
+                cardsHTML += `
+                    <div class="bg-white rounded-lg shadow-md p-4 mb-4 border border-gray-100 continuous-charge-card">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800"><span class="continuous-charge-badge">持续回费</span></h3>
+                                <p class="text-sm text-gray-500 mt-1">${bindingText}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="delete-continuous-charge p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors duration-200" data-index="${index}" title="删除">
+                                    <i class="fas fa-trash text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 rounded p-3">
+                            ${paramsHTML}
+                        </div>
+                    </div>
+                `;
+            });
+
             ruleContainer.innerHTML = cardsHTML;
         }
     }
@@ -218,106 +245,12 @@ class UIRenderer {
     renderDataItemList() {
         // 获取分页数据
         const paginatedItems = this.dataManager.getPaginatedDataItems();
-        const totalItems = this.dataManager.getDataItems().length;
         
-        // 使用数据表格组件渲染数据项列表
+        // 使用数据表格组件渲染数据项列表（表格组件在 App.initTables() 中始终创建）
         if (this.app.tables.dataItems) {
             this.app.tables.dataItems.setData(paginatedItems);
         } else {
-            // 降级处理：如果表格组件不可用，使用传统渲染方式
-            const dataItemList = document.getElementById('data-item-list');
-            if (!dataItemList) return;
-
-            const characters = this.dataManager.getCharacters();
-            
-            if (totalItems === 0) {
-                dataItemList.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">
-                            暂无数据项
-                            <button id="add-data-item-btn" class="btn btn-primary btn-sm ml-2">
-                                <i class="fas fa-plus"></i> 添加数据项
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-
-            // 渲染普通数据项
-            const rows = paginatedItems.map(item => {
-                // 为初始化类型的默认行应用特殊格式
-                if (item.action === '初始化') {
-                    return `
-                        <tr id="data-item-${item.id}">
-                            <td>
-                                <input type="checkbox" class="data-item-checkbox" data-id="${item.id}">
-                            </td>
-                            <td>-</td>
-                            <td>${item.action}</td>
-                            <td>${item.time.toFixed(2)} c</td>
-                            <td>${item.cost.toFixed(2)} c</td>
-                            <td>${item.timeInterval.toFixed(3)} s</td>
-                            <td>${item.costDeduction.toFixed(2)} c</td>
-                            <td>${item.remainingCost.toFixed(2)} c</td>
-                        </tr>
-                    `;
-                }
-                
-                // 为回费类型的特殊行应用特殊样式
-                if (item.action === '回费') {
-                    const character = characters.find(c => c.id === item.characterId)?.name || '未知学生';
-                    const costChange = item.costDeduction > 0 ? '-' : '';
-                    
-                    return `
-                        <tr id="data-item-${item.id}" class="bg-white border-2 border-blue-400 font-medium shadow-sm">
-                            <td>
-                                <input type="checkbox" class="data-item-checkbox" data-id="${item.id}">
-                            </td>
-                            <td>${character}</td>
-                            <td>${item.action}</td>
-                            <td>${item.time.toFixed(2)}</td>
-                            <td>${item.cost.toFixed(2)}</td>
-                            <td>${item.timeInterval.toFixed(2)}</td>
-                            <td>${costChange}${item.costDeduction.toFixed(2)}</td>
-                            <td>${item.remainingCost.toFixed(2)}</td>
-                        </tr>
-                    `;
-                }
-                
-                // 普通数据项的渲染
-                const character = characters.find(c => c.id === item.characterId)?.name || '未知学生';
-                const costChange = item.costDeduction > 0 ? '-' : '';
-                
-                return `
-                    <tr id="data-item-${item.id}">
-                        <td>
-                            <input type="checkbox" class="data-item-checkbox" data-id="${item.id}">
-                        </td>
-                        <td>${character}</td>
-                        <td>${item.action}</td>
-                        <td>${item.time.toFixed(2)}</td>
-                        <td>${item.cost.toFixed(2)}</td>
-                        <td>${item.timeInterval.toFixed(2)}</td>
-                        <td>${costChange}${item.costDeduction.toFixed(2)}</td>
-                        <td>${item.remainingCost.toFixed(2)}</td>
-                    </tr>
-                `;
-            });
-            
-            // 添加特殊样式的行
-            rows.push(`
-                <tr id="special-data-row" class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 font-medium">
-                    <td colspan="9" class="text-center py-4 px-6">
-                        <div class="flex items-center justify-center gap-2">
-                            <i class="fas fa-star text-blue-600"></i>
-                            <span class="text-blue-800">特殊数据行 - 用于后续功能扩展</span>
-                        </div>
-                    </td>
-                </tr>
-            `);
-            
-            dataItemList.innerHTML = rows.join('');
+            console.error('数据项表格组件未初始化，无法渲染数据项列表');
         }
         
         // 渲染分页控件
@@ -431,8 +364,6 @@ class UIRenderer {
             const characters = this.dataManager.getCharacters();
             const rules = this.dataManager.getRules();
             const items = this.dataManager.getDataItems();
-            const currentCost = this.dataManager.currentCost;
-            const totalCost = this.dataManager.totalCost;
             const totalEfficiency = this.calculator.calculateTotalCostEfficiency(characters);
             
             statusInfo.innerHTML = `
@@ -480,16 +411,6 @@ class UIRenderer {
         });
     }
 
-    // 格式化时间为00:00.000格式
-    formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        const intSeconds = Math.floor(remainingSeconds);
-        const milliseconds = Math.floor((remainingSeconds - intSeconds) * 1000);
-        
-        return `${minutes.toString().padStart(2, '0')}:${intSeconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
-    }
-    
     // 更新状态栏
     updateStatusBar() {
         const statusBarContent = document.getElementById('statusBarContent');
@@ -522,6 +443,7 @@ class UIRenderer {
         }
         
         // 生成状态项HTML
+        const esc = AppUtils.security.escapeHtml;
         const statusItemsHTML = appliedSkills.map(item => {
             const character = characters.find(c => c.id === item.characterId);
             if (!character) return '';
@@ -540,16 +462,16 @@ class UIRenderer {
                         <div>
                             <div class="status-item-character">
                                 <i class="fas fa-user"></i>
-                                ${character.name}
+                                ${esc(character.name)}
                             </div>
-                            <div class="status-item-skill">${skillInfo.skill}</div>
+                            <div class="status-item-skill">${esc(skillInfo.skill)}</div>
                         </div>
                         <div class="status-item-duration">
                             ${triggerTime}
                         </div>
                     </div>
                     <div class="status-item-description">
-                        ${skillInfo.description}
+                        ${esc(skillInfo.description)}
                     </div>
                 </div>
             `;
@@ -920,10 +842,11 @@ class UIRenderer {
         }
         
         // 渲染时间轴卡片
+        const esc = AppUtils.security.escapeHtml;
         const timelineCardsHTML = sortedItems.map((item, index) => {
             // 为所有属性添加默认值，防止访问不存在的属性
-            const character = characters.find(c => c.id === item.characterId)?.name || '未知学生';
-            const action = item.action || '未知动作';
+            const character = esc(characters.find(c => c.id === item.characterId)?.name || '未知学生');
+            const action = esc(item.action || '未知动作');
             const time = typeof item.time === 'number' ? item.time : 0;
             const cost = typeof item.cost === 'number' ? item.cost : 0;
             const remainingCost = typeof item.remainingCost === 'number' ? item.remainingCost : 0;
@@ -977,20 +900,6 @@ class UIRenderer {
         }).join('');
         
         timelineEventsContainer.innerHTML = timelineCardsHTML;
-    }
-    
-    /**
-     * 格式化时间为00:00.000格式
-     * @param {number} seconds - 秒数
-     * @returns {string} 格式化后的时间字符串
-     */
-    formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        const intSeconds = Math.floor(remainingSeconds);
-        const milliseconds = Math.floor((remainingSeconds - intSeconds) * 1000);
-        
-        return `${minutes.toString().padStart(2, '0')}:${intSeconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
     }
     
     /**
@@ -1228,6 +1137,8 @@ class UIRenderer {
         if (!positionsInfoEl || !videoAxisBtnContainer) return;
         
         let infoHTML = '';
+        // positions / initialSkills / videoAxisLink 均可能来自导入的存档数据，必须转义防 XSS
+        const esc = AppUtils.security.escapeHtml;
         
         // 检查是否有学生站位信息需要显示
         const hasPositions = exportInfo.positions.some(pos => pos);
@@ -1239,7 +1150,7 @@ class UIRenderer {
         if (hasPositions) {
             let positionsHTML = exportInfo.positions
                 .filter(pos => pos) // 只保留有值的站位
-                .map(pos => `<span class="font-medium">${pos}</span>`)
+                .map(pos => `<span class="font-medium">${esc(pos)}</span>`)
                 .join(' ');
             
             infoHTML += `<div class="mb-1 ml-4"><span class="text-sm text-blue-700 bg-blue-50 px-2 py-1 rounded-md">站位: ${positionsHTML}</span></div>`;
@@ -1249,7 +1160,7 @@ class UIRenderer {
         if (hasInitialSkills) {
             let initialSkillsHTML = exportInfo.initialSkills
                 .filter(skill => skill) // 只保留有值的技能
-                .map(skill => `<span class="font-medium text-red-600">${skill}</span>`)
+                .map(skill => `<span class="font-medium text-red-600">${esc(skill)}</span>`)
                 .join(' ');
             
             infoHTML += `<div class="ml-4"><span class="text-sm text-red-700 bg-red-50 px-2 py-1 rounded-md">初始技能: ${initialSkillsHTML}</span></div>`;
@@ -1265,30 +1176,38 @@ class UIRenderer {
             positionsInfoEl.style.display = 'none';
         }
         
-        // 渲染视频轴按钮
-        if (exportInfo.videoAxisLink) {
+        // 渲染视频轴按钮（校验 URL 安全性，阻止 javascript: 等危险协议）
+        const videoAxisLink = exportInfo.videoAxisLink;
+        if (videoAxisLink && AppUtils.security.isSafeUrl(videoAxisLink)) {
             videoAxisBtnContainer.innerHTML = `
-                <a href="${exportInfo.videoAxisLink}" target="_blank" rel="noopener noreferrer" class="btn btn-primary flex items-center gap-1 px-3 py-1 rounded hover:bg-opacity-80 transition-colors duration-200">
+                <a href="${esc(videoAxisLink)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary flex items-center gap-1 px-3 py-1 rounded hover:bg-opacity-80 transition-colors duration-200">
                     <i class="fas fa-play-circle"></i>
                     <span>视频轴</span>
                 </a>
             `;
         } else {
-            // 没有视频轴链接，清空容器
+            // 没有视频轴链接或链接不安全，清空容器
             videoAxisBtnContainer.innerHTML = '';
         }
     }
     
     /**
      * 初始化时间轴交互功能
-     * @param {Array} items - 数据项数组
-     * @param {Array} characters - 学生数组
+     * @param {Array} items - 数据项数组（未使用，保留参数兼容既有调用）
+     * @param {Array} characters - 学生数组（未使用，保留参数兼容既有调用）
      */
     initTimelineInteractions(items, characters) {
         // 图表类型切换功能
         const toggleChartTypeBtn = document.getElementById('toggleChartType');
         if (toggleChartTypeBtn) {
-            let chartType = 'line';
+            // 防止重复绑定：initTimelineView 会在每次 refreshAll 时重新调用，
+            // 若不加以限制，监听器会累积导致一次点击触发多次切换
+            if (toggleChartTypeBtn.dataset.chartTypeBound) {
+                return;
+            }
+            toggleChartTypeBtn.dataset.chartTypeBound = '1';
+            
+            let chartType = window.costChartType || 'line';
             
             toggleChartTypeBtn.addEventListener('click', () => {
                 // 切换图表类型

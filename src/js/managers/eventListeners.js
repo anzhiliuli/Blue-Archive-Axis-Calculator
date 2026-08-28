@@ -8,6 +8,9 @@ class EventListeners {
         this.app = app;
         this.currentTargetRowId = null;
         this.skillBindingModalEventsAdded = false; // 标记是否已添加技能绑定模态框事件监听器
+        // 编辑表单的精确费用值（表单输入框仅显示两位小数，提交时使用此值避免精度丢失）
+        // 注意：绝不能将预览值直接写回 dataManager 的数据模型，否则用户取消编辑也会污染数据
+        this._editFormPreciseCost = null;
         this.initAllListeners();
     }
 
@@ -139,6 +142,10 @@ class EventListeners {
                     const btn = e.target.closest('.delete-rule');
                     const ruleId = parseInt(btn.dataset.id);
                     this.confirmDeleteRule(ruleId);
+                } else if (e.target.closest('.delete-continuous-charge')) {
+                    const btn = e.target.closest('.delete-continuous-charge');
+                    const index = parseInt(btn.dataset.index);
+                    this.confirmDeleteContinuousCharge(index);
                 }
             });
         }
@@ -211,6 +218,8 @@ class EventListeners {
                     document.getElementById('editTriggerCharacter').value = dataItem.characterId;
                     document.getElementById('editAction').value = dataItem.action;
                     document.getElementById('editTriggerCost').value = dataItem.cost.toFixed(2);
+                    // 记录原始精确费用，提交时优先使用
+                    this._editFormPreciseCost = dataItem.cost;
                     
                     // 格式化时间为 00:00.000 格式
                     const formatTime = (seconds) => {
@@ -242,81 +251,21 @@ class EventListeners {
                 // 处理初始化逻辑 - 获取初始时间
                 const initialTimeStr = document.getElementById('initialTime').value;
                 
-                // 将时间格式转换为秒数，支持多种输入格式：
-                // - MM:SS.fff (完整格式)
-                // - MM:SS (无毫秒)
-                // - SS.fff (无分钟)
-                // - SS (仅秒数)
-                // - 纯数字 (直接作为秒数)
+                // 解析初始化时间（支持纯数字秒数与 MM:SS.fff / SS.fff 格式）
                 let initialTimeSeconds = 0;
                 if (initialTimeStr) {
-                    // 尝试直接解析为数字
                     if (!isNaN(initialTimeStr)) {
                         initialTimeSeconds = parseFloat(initialTimeStr);
                     } else {
-                        const timeParts = initialTimeStr.split(':');
-                        if (timeParts.length === 2) {
-                            // MM:SS.fff 或 MM:SS
-                            const minutes = parseInt(timeParts[0]) || 0;
-                            const secondsParts = timeParts[1].split('.');
-                            const seconds = parseInt(secondsParts[0]) || 0;
-                            const milliseconds = parseInt(secondsParts[1]) || 0;
-                            initialTimeSeconds = minutes * 60 + seconds + milliseconds / 1000;
-                        } else if (timeParts.length === 1) {
-                            // SS.fff 或 SS
-                            const secondsParts = timeParts[0].split('.');
-                            const seconds = parseInt(secondsParts[0]) || 0;
-                            const milliseconds = parseInt(secondsParts[1]) || 0;
-                            initialTimeSeconds = seconds + milliseconds / 1000;
-                        }
+                        initialTimeSeconds = this.parseTimeString(initialTimeStr);
                     }
                 }
                 
-                // 清空现有数据项并设置初始化状态
-                this.dataManager.clearDataItems();
-                
-                // 清空学生关联规则
-                this.dataManager.rules = [];
-                
-                // 清空持续回费设置
-                this.dataManager.clearContinuousChargeData();
-                
-                // 重置导出信息
-                this.dataManager.exportInfo = {
-                    positions: ["", "", "", ""],
-                    initialSkills: ["", "", ""],
-                    videoAxisLink: ""
-                };
+                // 通过数据管理器原子化完成：清空数据项/规则/持续回费/导出信息、
+                // 设置初始化时间并生成默认初始化行（避免UI层直写数据模型与撤销栈中间态）
+                this.dataManager.resetForInitialization(initialTimeSeconds);
                 
                 this.app.setDataTableInitialized(true);
-                
-                // 设置初始化时间
-                this.dataManager.setInitializationTime(initialTimeSeconds);
-                
-                // 移除初始费用设定，费用从0开始
-                this.dataManager.setCurrentCost(0);
-                
-                // 获取当前学生列表
-                const characters = this.dataManager.getCharacters();
-                
-                // 初始化后在数据表中生成默认行，时间为初始化时间
-                // 直接创建符合格式要求的默认数据项，即使没有学生也生成
-                const defaultItem = {
-                    id: `item_${Date.now()}`,
-                    characterId: characters.length > 0 ? characters[0].id : 0,
-                    cost: 0,
-                    action: '初始化',
-                    time: initialTimeSeconds,
-                    timeInterval: 0,
-                    costDeduction: 0,
-                    remainingCost: 0 // 初始剩余费用为0
-                };
-                
-                // 添加到数据管理器
-                this.dataManager.pushDataItem(defaultItem);
-                
-                // 确保第一个数据项的时间间隔计算正确
-                this.calculator.recalculateAllItems();
                 
                 // 刷新UI，确保所有更改都能正确显示
                 this.uiRenderer.refreshAll();
@@ -475,15 +424,10 @@ class EventListeners {
     
     // 显示回费速度详情
     showChargeSpeedDetail() {
-        // 获取当前选中的数据项
-        if (!window.selectedTargetRowId) {
-            this.modalManager.showToast('请先选择一行数据', 'warning');
-            return;
-        }
-        
-        const dataItem = this.dataManager.dataItems.find(item => item.id === window.selectedTargetRowId);
+        // 获取当前选中的数据项（应用级集中状态）
+        const dataItem = this.app.getSelectedTargetItem();
         if (!dataItem) {
-            this.modalManager.showToast('选中的数据项不存在', 'error');
+            this.modalManager.showToast('请先选择一行数据', 'warning');
             return;
         }
         
@@ -875,8 +819,8 @@ class EventListeners {
         const skillBindingBtn = document.getElementById('skillBindingBtn');
         if (skillBindingBtn) {
             skillBindingBtn.addEventListener('click', () => {
-                // 检查是否已选择目标行
-                if (!window.selectedTargetRowId) {
+                // 检查是否已选择目标行（应用级集中状态）
+                if (!this.app.selectedTargetRowId) {
                     this.modalManager.showToast('请先在数据表中选择一行作为目标行', 'error');
                     return;
                 }
@@ -1563,8 +1507,8 @@ class EventListeners {
         const selectedRowInfoEl = document.getElementById('selectedTargetRowInfo');
         if (!selectedRowInfoEl) return;
         
-        // 获取选中的目标行ID
-        const selectedRowId = window.selectedTargetRowId;
+        // 获取选中的目标行ID（应用级集中状态）
+        const selectedRowId = this.app.selectedTargetRowId;
         if (!selectedRowId) {
             selectedRowInfoEl.innerHTML = '<p class="text-sm text-gray-500">请先在数据表中选择一行作为目标行</p>';
             return;
@@ -1584,8 +1528,9 @@ class EventListeners {
         }
         
         // 更新选中行信息
+        const esc = AppUtils.security.escapeHtml;
         selectedRowInfoEl.innerHTML = `
-            <p class="text-sm font-medium">${dataItem.time} - ${character.name} (${dataItem.action})</p>
+            <p class="text-sm font-medium">${dataItem.time} - ${esc(character.name)} (${esc(dataItem.action)})</p>
             <p class="text-xs text-gray-500 mt-1">触发费用: ${dataItem.cost}c | 费用扣除: ${dataItem.costDeduction}c | 剩余费用: ${dataItem.remainingCost}c</p>
         `;
     }
@@ -1597,8 +1542,8 @@ class EventListeners {
         const duration = parseFloat(document.getElementById('duration').value);
         const recoveryIncrease = parseFloat(document.getElementById('recoveryIncrease').value);
         
-        // 获取选中的目标行ID
-        const targetRowId = window.selectedTargetRowId;
+        // 获取选中的目标行ID（应用级集中状态）
+        const targetRowId = this.app.selectedTargetRowId;
         
         // 验证表单数据
         if (!targetRowId || isNaN(delayTime) || isNaN(duration) || isNaN(recoveryIncrease)) {
@@ -1632,25 +1577,14 @@ class EventListeners {
         // 重新计算数据项
         this.calculator.recalculateAllItems();
         
-        // 清空选中的目标行ID，确保下次操作时需要重新选择目标行
-        window.selectedTargetRowId = null;
+        // 清空选中的目标行ID（应用级集中状态），确保下次操作时需要重新选择目标行
+        // 单选框的 change 监听由 DataTable 渲染时统一绑定，此处无需（也不应）重复绑定
+        this.app.selectedTargetRowId = null;
         
         // 清空表单字段的值，确保下次操作时表单是干净的
         document.getElementById('delayTime').value = '';
         document.getElementById('duration').value = '';
         document.getElementById('recoveryIncrease').value = '';
-        
-        // 重新为所有目标行单选框添加事件监听，确保重新渲染后仍能正常工作
-        setTimeout(() => {
-            const radioButtons = document.querySelectorAll('.target-row-radio');
-            radioButtons.forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    // 保存选中的目标行ID
-                    window.selectedTargetRowId = parseInt(e.target.value);
-
-                });
-            });
-        }, 100);
         
         // 刷新数据表，显示更新后的数据
         this.uiRenderer.refreshAll();
@@ -1679,23 +1613,23 @@ class EventListeners {
 
     // 显示添加规则模态框
     showAddRuleModal() {
-        // 检查是否选择了目标行
-        if (!window.selectedTargetRowId) {
+        // 检查是否选择了目标行（应用级集中状态）
+        if (!this.app.selectedTargetRowId) {
             // 显示提示信息
             this.modalManager.showToast('请先在数据表中选择目标行', 'warning');
             return;
         }
         
         // 获取选中的目标行数据
-        const selectedItem = this.dataManager.getDataItemById(window.selectedTargetRowId);
+        const selectedItem = this.dataManager.getDataItemById(this.app.selectedTargetRowId);
         if (!selectedItem) {
             // 显示提示信息
             this.modalManager.showToast('选中的目标行不存在', 'error');
             return;
         }
         
-        // 保存目标行ID到全局变量，用于后续保存规则时使用
-        this.currentTargetRowId = window.selectedTargetRowId;
+        // 保存目标行ID到实例状态，用于后续保存规则时使用
+        this.currentTargetRowId = this.app.selectedTargetRowId;
         // 保存选中行的时间，用于自动填充生效时间
         this.selectedRowTime = selectedItem.time;
         
@@ -2077,8 +2011,8 @@ class EventListeners {
         // 重置表单
         e.target.reset();
         
-        // 清空选中的目标行ID，确保下次添加规则时需要重新选择目标行
-        window.selectedTargetRowId = null;
+        // 清空选中的目标行ID（应用级集中状态），确保下次添加规则时需要重新选择目标行
+        this.app.selectedTargetRowId = null;
         this.currentTargetRowId = null;
         
 
@@ -2127,6 +2061,19 @@ class EventListeners {
                 this.dataManager.deleteRule(ruleId);
                 this.uiRenderer.refreshAll();
                 this.modalManager.showToast('规则删除成功', 'success');
+            }
+        );
+    }
+
+    // 确认删除持续回费设置
+    confirmDeleteContinuousCharge(index) {
+        this.modalManager.showConfirmModal(
+            '删除持续回费',
+            '确定要删除这条持续回费设置吗？删除后相关的回费加成将不再生效。',
+            () => {
+                this.dataManager.deleteContinuousCharge(index);
+                this.uiRenderer.refreshAll();
+                this.modalManager.showToast('持续回费设置已删除', 'success');
             }
         );
     }
@@ -2254,6 +2201,8 @@ class EventListeners {
         document.getElementById('editAction').value = item.action;
         document.getElementById('editTime').value = item.time;
         document.getElementById('editTriggerCost').value = item.cost.toFixed(2);
+        // 记录原始精确费用，提交时优先使用
+        this._editFormPreciseCost = item.cost;
         
         // 在编辑界面时间字段添加提示信息
         const timeField = document.getElementById('editTime');
@@ -2264,6 +2213,11 @@ class EventListeners {
 
     // 添加编辑表单实时计算事件监听器
     addEditFormRealTimeCalculation() {
+        // 防止重复绑定：若已有绑定则先移除，避免监听器累积导致一次输入触发多次计算
+        if (this.handleTimeChange) {
+            this.removeEditFormRealTimeCalculation();
+        }
+        
         const timeInput = document.getElementById('editTime');
         const costInput = document.getElementById('editTriggerCost');
         const characterSelect = document.getElementById('editTriggerCharacter');
@@ -2456,8 +2410,9 @@ class EventListeners {
         // 更新费用输入框，显示两位小数（仅用于UI显示）
         document.getElementById('editTriggerCost').value = calculatedCost.toFixed(2);
         
-        // 同时更新原始数据项的费用，保存精确值
-        originalItem.cost = calculatedCost;
+        // 将精确值暂存在实例状态中，供表单提交时使用
+        // 注意：不能直接写入 originalItem.cost —— 那会在用户确认前就污染数据模型（取消编辑也无法恢复）
+        this._editFormPreciseCost = calculatedCost;
     }
     
     // 从费用计算时间
@@ -2489,8 +2444,8 @@ class EventListeners {
             previousRemainingCost = previousItem.remainingCost;
         }
         
-        // 保存精确的费用值到原始数据项
-        originalItem.cost = costValue;
+        // 用户手动输入的费用即为精确值，暂存供提交时使用（不直写数据模型）
+        this._editFormPreciseCost = costValue;
         
         // 计算所需费用差：目标费用 - 上一个数据项的剩余费用
         const requiredCost = costValue - previousRemainingCost;
@@ -2567,77 +2522,6 @@ class EventListeners {
         const secondsInt = Math.floor(remainingSeconds);
         const milliseconds = Math.floor((remainingSeconds - secondsInt) * 1000);
         return `${minutes.toString().padStart(2, '0')}:${secondsInt.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
-    }
-    
-    // 计算费用变化
-    calculateCostDifference(timeDiff, originalTime, isTimeIncrease) {
-        const timeStep = 0.001; // 毫秒级精度
-        const absTimeDiff = Math.abs(timeDiff);
-        const totalSteps = Math.floor(absTimeDiff / timeStep);
-        const remainingTime = absTimeDiff % timeStep;
-        const stepDirection = isTimeIncrease ? 1 : -1;
-        
-        let costDiff = 0;
-        let currentTime = originalTime;
-        
-        // 模拟费用恢复过程 - 整数步
-        for (let i = 0; i < totalSteps; i++) {
-            const recoveryRate = this.calculator.calculateTotalRecoveryRate(currentTime);
-            const stepRecovery = recoveryRate * timeStep;
-            costDiff -= stepRecovery * stepDirection;
-            currentTime += timeStep * stepDirection;
-        }
-        
-        // 处理剩余时间
-        if (remainingTime > 0.0001) {
-            const recoveryRate = this.calculator.calculateTotalRecoveryRate(currentTime);
-            const stepRecovery = recoveryRate * remainingTime;
-            costDiff -= stepRecovery * stepDirection;
-        }
-        
-        return parseFloat(costDiff.toFixed(3));
-    }
-    
-    // 计算时间变化
-    calculateTimeDifference(costDiff, originalTime, isCostIncrease) {
-        const timeStep = 0.001; // 毫秒级精度
-        const targetCostDiff = Math.abs(costDiff);
-        const costDirection = isCostIncrease ? 1 : -1;
-        
-        let recoveredCost = 0;
-        let timeDiff = 0;
-        let currentTime = originalTime;
-        const maxIterations = 100000; // 防止异常情况下的死循环
-        let iterations = 0;
-        
-        // 模拟费用恢复过程，直到达到所需费用变化
-        while (Math.abs(recoveredCost) < targetCostDiff && iterations < maxIterations) {
-            iterations++;
-            
-            const recoveryRate = this.calculator.calculateTotalRecoveryRate(currentTime);
-            
-            // 防止回费速度为0导致死循环
-            if (recoveryRate < 0.001) break;
-            
-            const stepRecovery = recoveryRate * timeStep;
-            const adjustedStepRecovery = stepRecovery * costDirection;
-            
-            // 检查是否达到目标费用
-            if (Math.abs(recoveredCost + adjustedStepRecovery) >= targetCostDiff) {
-                // 计算精确时间，使用更精确的计算方式
-                const remainingCost = targetCostDiff - Math.abs(recoveredCost);
-                const exactTime = remainingCost / recoveryRate;
-                timeDiff += exactTime;
-                break;
-            }
-            
-            // 累加费用和时间
-            recoveredCost += Math.abs(adjustedStepRecovery);
-            timeDiff += timeStep;
-            currentTime -= timeStep * costDirection;
-        }
-        
-        return parseFloat(timeDiff.toFixed(3));
     }
     
     // 计算指定时间间隔内的费用恢复
@@ -2749,12 +2633,15 @@ class EventListeners {
         }
         
         // 初始化表单数据
+        // 优先使用精确费用值（实时计算结果或原始值），避免从UI输入框读取被四舍五入的显示值
+        const preciseCost = (this._editFormPreciseCost !== null && this._editFormPreciseCost !== undefined)
+            ? this._editFormPreciseCost
+            : inputCost;
         const formData = {
             characterId: characterId,
             action: action,
             time: timeInSeconds,
-            // 使用原始数据的精确费用值，而不是从UI输入框获取格式化后的值
-            cost: originalItem.cost
+            cost: preciseCost
         };
 
         // 验证表单数据
@@ -2794,33 +2681,6 @@ class EventListeners {
         
         // 显示成功提示
         this.modalManager.showToast('数据项删除成功', 'success');
-    }
-
-    // 批量删除数据项
-    bulkDeleteDataItems() {
-        const checkboxes = document.querySelectorAll('.data-item-checkbox:checked');
-        if (checkboxes.length === 0) {
-            this.modalManager.showToast('请选择要删除的数据项', 'warning');
-            return;
-        }
-
-        this.modalManager.showConfirmModal(
-            '确认批量删除',
-            `确定要删除选中的 ${checkboxes.length} 个数据项吗？`,
-            () => {
-                const ids = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
-                this.dataManager.deleteDataItems(ids);
-                
-                // 重新计算所有数据项
-                this.calculator.recalculateAllItems();
-                
-                // 刷新UI
-                this.uiRenderer.refreshAll();
-                
-                // 显示成功提示
-                this.modalManager.showToast('数据项批量删除成功', 'success');
-            }
-        );
     }
 
     // 验证数据项表单
@@ -3163,12 +3023,12 @@ class EventListeners {
         // 获取视频轴链接
         const videoAxisLink = document.getElementById('videoAxisLink')?.value || '';
         
-        // 保存到数据管理器
-        this.dataManager.exportInfo = {
+        // 保存到数据管理器（通过API，避免UI层直写数据字段）
+        this.dataManager.setExportInfo({
             positions,
             initialSkills,
             videoAxisLink
-        };
+        });
     }
     
     // 导出数据为JSON文件
@@ -3476,15 +3336,13 @@ class EventListeners {
         filteredData = filteredData.filter(item => {
             let match = true;
             if (characterId) match = match && item.characterId === parseInt(characterId);
+            // item.time 本身就是秒数（number），直接比较即可
+            // 之前误将数字传入按字符串解析的 parseTime，会导致 TypeError 崩溃
             if (startTime !== null) {
-                // 解析item.time为秒数进行比较
-                const itemTime = parseTime(item.time);
-                match = match && itemTime >= startTime;
+                match = match && typeof item.time === 'number' && item.time >= startTime;
             }
             if (endTime !== null) {
-                // 解析item.time为秒数进行比较
-                const itemTime = parseTime(item.time);
-                match = match && itemTime <= endTime;
+                match = match && typeof item.time === 'number' && item.time <= endTime;
             }
             return match;
         });
@@ -3499,76 +3357,6 @@ class EventListeners {
         
         // 显示筛选结果提示
         this.modalManager.showToast(`筛选完成，共显示 ${filteredData.length} 条数据`, 'success');
-    }
-
-    // 确认清空所有数据
-    confirmClearAllData() {
-        this.modalManager.showConfirmModal(
-            '确认清空所有数据',
-            '确定要清空所有数据吗？此操作不可恢复。',
-            () => {
-                this.dataManager.clearAllData();
-                this.uiRenderer.refreshAll();
-                this.modalManager.showToast('所有数据已清空', 'success');
-            }
-        );
-    }
-
-    // 运行模拟计算
-    runSimulation() {
-        const duration = parseInt(document.getElementById('simulation-duration').value) || 30;
-        const characters = this.dataManager.getCharacters();
-        
-        if (characters.length === 0) {
-            this.modalManager.showToast('请先添加学生', 'error');
-            return;
-        }
-        
-        // 显示加载状态
-        this.uiRenderer.showLoading('正在进行模拟计算...');
-        
-        // 运行模拟
-        setTimeout(() => {
-            const results = this.calculator.calculateOptimalSkillOrder(characters, duration);
-            
-            // 显示模拟结果
-            this.showSimulationResults(results);
-            
-            // 隐藏加载状态
-            this.uiRenderer.hideLoading();
-        }, 500);
-    }
-
-    // 显示模拟结果
-    showSimulationResults(results) {
-        const resultContainer = document.getElementById('simulation-results');
-        if (!resultContainer) return;
-        
-        if (results.length === 0) {
-            resultContainer.innerHTML = '<p class="text-center py-4 text-muted">模拟计算未找到可执行的技能</p>';
-            return;
-        }
-        
-        resultContainer.innerHTML = `
-            <h5 class="mb-3">模拟结果 (${results.length} 个技能释放)</h5>
-            <div class="simulation-results-list">
-                ${results.map(result => `
-                    <div class="simulation-result-item">
-                        <span class="time">${result.time}s:</span>
-                        <span class="character">${result.characterName}</span>
-                        <span class="action">${result.action}</span>
-                        <span class="cost">
-                            ${result.costBefore} → 
-                            <span class="cost-used">-${result.costUsed}</span> → 
-                            ${result.costAfter}
-                        </span>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-        
-        // 滚动到结果区域
-        this.uiRenderer.scrollToElement('simulation-results');
     }
 }
 

@@ -291,12 +291,8 @@ class DataTable {
             // 为已添加附加数据的行应用特殊样式
             if (item.additionalData && (item.additionalData.note || item.additionalData.imageUrl)) {
                 row.classList.add('border-l-4', 'border-red-500');
-                // 为角色名设置红色字体
-                const character = window.appInstance?.dataManager.getCharacterById(item.characterId);
-                if (character) {
-                    // 标记为已添加附加数据的行
-                    row.setAttribute('data-has-additional-data', 'true');
-                }
+                // 标记为已添加附加数据的行
+                row.setAttribute('data-has-additional-data', 'true');
             }
 
             // 渲染列数据
@@ -396,11 +392,10 @@ class DataTable {
         
         // 重新绑定右键菜单事件（因为tbody和数据行已重新创建）
         this.bindContextMenuEvents();
-        
-        // 表格重新渲染后，恢复游戏模式视图的列隐藏状态
-        // 检查是否存在全局的游戏模式状态
-        if (window.appInstance && window.appInstance.eventListeners && window.appInstance.eventListeners.isGameModeActive) {
-            window.appInstance.eventListeners.toggleGameModeColumns(window.appInstance.eventListeners.isGameModeActive);
+
+        // 表格重新渲染后，由外部（通过配置注入）恢复视图状态，避免反向依赖全局实例
+        if (typeof this.options.onRenderRestore === 'function') {
+            this.options.onRenderRestore();
         }
     }
 
@@ -478,7 +473,8 @@ class DataTable {
         const selectedRows = [];
         this.tbody.querySelectorAll('tr.selected').forEach(row => {
             const id = row.dataset.id;
-            const item = this.data.find(d => d.id === id);
+            // dataset.id 为字符串，统一转成字符串比较，避免类型不匹配导致永远匹配不到
+            const item = this.data.find(d => String(d.id) === String(id));
             if (item) selectedRows.push(item);
         });
         return selectedRows;

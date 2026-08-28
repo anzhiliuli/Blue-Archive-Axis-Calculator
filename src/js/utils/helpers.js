@@ -39,7 +39,7 @@ const AppUtils = {
 
         // 检查对象是否为空
         isEmptyObject: (value) => {
-            return this.isObject(value) && Object.keys(value).length === 0;
+            return AppUtils.validate.isObject(value) && Object.keys(value).length === 0;
         },
 
         // 检查是否为布尔值
@@ -54,7 +54,7 @@ const AppUtils = {
 
         // 检查是否为有效的ID（正数）
         isValidId: (value) => {
-            return this.isNumber(value) && value > 0;
+            return AppUtils.validate.isNumber(value) && value > 0;
         }
     },
 
@@ -79,17 +79,19 @@ const AppUtils = {
             return num.toFixed(1) + 's';
         },
 
-        // 格式化时间为MM:SS.fff格式
+        // 格式化时间为MM:SS.fff格式（支持负数时间）
         timeMMSSfff: (seconds) => {
             const num = parseFloat(seconds);
             if (isNaN(num)) return '00:00.000';
-            
-            const totalSeconds = Math.floor(num);
-            const milliseconds = Math.floor((num - totalSeconds) * 1000);
+
+            const sign = num < 0 ? '-' : '';
+            const absNum = Math.abs(num);
+            const totalSeconds = Math.floor(absNum);
+            const milliseconds = Math.floor((absNum - totalSeconds) * 1000);
             const minutes = Math.floor(totalSeconds / 60);
             const secs = totalSeconds % 60;
-            
-            return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
+
+            return `${sign}${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(milliseconds).padStart(3, '0')}`;
         },
 
         // 格式化日期
@@ -253,9 +255,9 @@ const AppUtils = {
         // 切换元素显示/隐藏
         toggle: (element) => {
             if (element.style.display === 'none') {
-                this.show(element);
+                AppUtils.dom.show(element);
             } else {
-                this.hide(element);
+                AppUtils.dom.hide(element);
             }
         },
 
@@ -342,16 +344,14 @@ const AppUtils = {
         deepClone: (obj) => {
             if (obj === null || typeof obj !== 'object') return obj;
             if (obj instanceof Date) return new Date(obj.getTime());
-            if (obj instanceof Array) return obj.map(item => this.deepClone(item));
-            if (typeof obj === 'object') {
-                const clonedObj = {};
-                for (const key in obj) {
-                    if (obj.hasOwnProperty(key)) {
-                        clonedObj[key] = this.deepClone(obj[key]);
-                    }
+            if (Array.isArray(obj)) return obj.map(item => AppUtils.object.deepClone(item));
+            const clonedObj = {};
+            for (const key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    clonedObj[key] = AppUtils.object.deepClone(obj[key]);
                 }
-                return clonedObj;
             }
+            return clonedObj;
         },
 
         // 合并对象
@@ -362,6 +362,30 @@ const AppUtils = {
         // 检查对象是否包含所有指定属性
         hasAllProperties: (obj, properties) => {
             return properties.every(prop => obj.hasOwnProperty(prop));
+        }
+    },
+
+    // 安全处理函数（防XSS）
+    security: {
+        // HTML转义：将用户输入/导入数据安全地嵌入 innerHTML 前必须调用
+        escapeHtml: (value) => {
+            if (value === null || value === undefined) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+
+        // 校验URL是否安全（仅允许 http/https/相对路径，阻止 javascript: 等注入）
+        isSafeUrl: (url) => {
+            if (typeof url !== 'string' || !url.trim()) return false;
+            const normalized = url.trim().toLowerCase().replace(/[\s\u0000-\u001F]/g, '');
+            if (normalized.startsWith('javascript:') || normalized.startsWith('data:') || normalized.startsWith('vbscript:')) {
+                return false;
+            }
+            return /^(https?:\/\/|\/|\.\/|\.\.\/|#)/.test(normalized) || !/:/.test(normalized);
         }
     },
 

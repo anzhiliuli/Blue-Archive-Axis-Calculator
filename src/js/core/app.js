@@ -14,9 +14,11 @@ class App {
         this.isInitialized = false;
         this.dataTableInitialized = false;
         this.modules = {};
-        this.eventListeners = {};
+        this.eventListeners = null;
         this.navbar = null;
         this.tables = {};
+        // 当前选中的目标行ID（应用级状态，避免散落在 window 上）
+        this.selectedTargetRowId = null;
         this.initializeApp();
     }
 
@@ -35,10 +37,13 @@ class App {
         try {
             // 加载工具函数
             this.utils = window.AppUtils;
-            
+
             // 初始化数据管理器
             this.dataManager = new DataManager();
-            
+
+            // 加载本地持久化数据（作为初始化的一部分，确保首次渲染即为最新数据）
+            this.dataManager.loadFromLocalStorage();
+
             // 初始化计算管理器
             this.calculator = new Calculator(this.dataManager);
             
@@ -110,13 +115,10 @@ class App {
         this.tables.dataItems = new DataTable('dataItemsTable', [
             { field: 'id', title: '', sortable: false, render: (item) => {
                 // 在时间前显示单选框，用于选择目标行
-                return `<input type="radio" name="targetRow" value="${item.id}" class="target-row-radio" data-id="${item.id}">`;
+                const id = this.utils.security.escapeHtml(item.id);
+                return `<input type="radio" name="targetRow" value="${id}" class="target-row-radio" data-id="${id}">`;
             }},
             { field: 'time', title: '时间', sortable: true, render: (item) => {
-                // 初始化行特殊格式化
-                if (item.action === '初始化') {
-                    return this.utils.format.timeMMSSfff(item.time);
-                }
                 return this.utils.format.timeMMSSfff(item.time);
             }},
             { field: 'action', title: '动作', sortable: true },
@@ -126,32 +128,20 @@ class App {
                     return '-';
                 }
                 const character = this.dataManager.getCharacters().find(c => c.id === item.characterId);
-                return character ? character.name : '未知学生';
+                // 学生名来自用户输入/导入数据，必须转义后再嵌入HTML
+                return character ? this.utils.security.escapeHtml(character.name) : '未知学生';
             }},
             { field: 'cost', title: '触发费用', sortable: true, render: (item) => {
-                // 初始化行费用为0
-                return item.cost.toFixed(2);
+                return Number(item.cost || 0).toFixed(2);
             }},
             { field: 'timeInterval', title: '时间间隔', sortable: true, render: (item) => {
-                // 时间间隔显示3位小数
-                if (item.action === '初始化') {
-                    return item.timeInterval.toFixed(3) + ' s';
-                }
-                return item.timeInterval.toFixed(3);
+                return Number(item.timeInterval || 0).toFixed(3);
             }},
             { field: 'costDeduction', title: '费用扣除', sortable: true, render: (item) => {
-                // 初始化行特殊格式化
-                if (item.action === '初始化') {
-                    return item.costDeduction.toFixed(2) + ' c';
-                }
-                return item.costDeduction.toFixed(2);
+                return Number(item.costDeduction || 0).toFixed(2);
             }},
             { field: 'remainingCost', title: '剩余费用', sortable: true, render: (item) => {
-                // 初始化行特殊格式化
-                if (item.action === '初始化') {
-                    return item.remainingCost.toFixed(2) + ' c';
-                }
-                return item.remainingCost.toFixed(2);
+                return Number(item.remainingCost || 0).toFixed(2);
             }}
         ], {
             showActions: false,
@@ -165,26 +155,24 @@ class App {
                 const radioButtons = document.querySelectorAll('.target-row-radio');
                 radioButtons.forEach(radio => {
                     radio.addEventListener('change', (e) => {
-                        // 保存选中的目标行ID
-                        window.selectedTargetRowId = parseInt(e.target.value);
-                        
-                        // 获取选中的数据项
-                        const dataItem = this.dataManager.dataItems.find(item => item.id === window.selectedTargetRowId);
-                        if (dataItem) {
-                            // 计算当前时间点的回费速度
-                            const currentTime = dataItem.time;
-                            const totalRecoveryRate = this.calculator.calculateTotalRecoveryRate(currentTime);
-                            
-                            // 显示回费速度
-                            const speedElement = document.getElementById('currentChargeSpeed');
-                            if (speedElement) {
-                                speedElement.textContent = `${totalRecoveryRate.toFixed(4)} c/s`;
-                            }
-                        }
-
+                        this.setSelectedTargetRow(e.target.value);
                     });
                 });
-            }
+
+                // 渲染后恢复选中态，避免refreshAll后视觉选中丢失
+                if (this.selectedTargetRowId != null) {
+                    const selectedItem = this.getSelectedTargetItem();
+                    const radio = document.querySelector(`.target-row-radio[value="${this.selectedTargetRowId}"]`);
+                    if (selectedItem && radio) {
+                        radio.checked = true;
+                    } else {
+                        // 选中的行已被删除，清除陈旧的选中状态
+                        this.selectedTargetRowId = null;
+                    }
+                }
+            },
+            // 渲染后恢复视图状态（游戏模式列显隐等）
+            onRenderRestore: () => this.restoreTableViewState()
         });
         
         // 数据表格组件创建完成，但数据表尚未初始化
@@ -212,30 +200,6 @@ class App {
                 this.dataManager.deleteCharacter(character.id);
                 this.uiRenderer.refreshAll();
                 this.modalManager.showToast(`学生 "${character.name}" 已成功删除`, 'success');
-            }
-        );
-    }
-
-    /**
-     * 编辑规则
-     * @param {Object} rule - 规则数据
-     */
-    editRule(rule) {
-        this.modalManager.showModal('editRuleModal', rule);
-    }
-
-    /**
-     * 删除规则
-     * @param {Object} rule - 规则数据
-     */
-    deleteRule(rule) {
-        this.modalManager.showConfirmModal(
-            '删除规则',
-            `确定要删除此规则吗？此操作不可撤销。`,
-            () => {
-                this.dataManager.deleteRule(rule.id);
-                this.uiRenderer.renderRuleList();
-                this.modalManager.showToast('规则已成功删除', 'success');
             }
         );
     }
@@ -302,6 +266,41 @@ class App {
         this.modules[moduleName] = moduleInstance;
     }
     
+    // 设置当前选中的目标行（统一入口，保持选中态与回费速度显示同步）
+    setSelectedTargetRow(rowId) {
+        const id = parseInt(rowId);
+        this.selectedTargetRowId = Number.isNaN(id) ? null : id;
+        this.updateChargeSpeedDisplay();
+    }
+
+    // 获取当前选中的目标行数据项（不存在时返回null）
+    getSelectedTargetItem() {
+        if (this.selectedTargetRowId == null) return null;
+        return this.dataManager.dataItems.find(item => item.id === this.selectedTargetRowId) || null;
+    }
+
+    // 更新回费速度显示
+    updateChargeSpeedDisplay() {
+        const dataItem = this.getSelectedTargetItem();
+        if (!dataItem) return;
+
+        const currentTime = dataItem.time;
+        const totalRecoveryRate = this.calculator.calculateTotalRecoveryRate(currentTime);
+
+        const speedElement = document.getElementById('currentChargeSpeed');
+        if (speedElement) {
+            speedElement.textContent = `${totalRecoveryRate.toFixed(4)} c/s`;
+        }
+    }
+
+    // 表格渲染后恢复视图状态（游戏模式列显隐等）
+    restoreTableViewState() {
+        const listeners = this.eventListeners;
+        if (listeners && listeners.isGameModeActive) {
+            listeners.toggleGameModeColumns(listeners.isGameModeActive);
+        }
+    }
+
     // 查看附加数据
     viewAdditionalData(dataItemId) {
         this.eventListeners.viewAdditionalData(dataItemId);

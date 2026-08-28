@@ -18,11 +18,6 @@
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "bootstrap": "^5.3.3",
-    "chart.js": "^4.4.8",
-    "font-awesome": "^6.5.1"
-  },
   "devDependencies": {
     "http-server": "^14.1.1"
   },

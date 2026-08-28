@@ -110,7 +110,176 @@
 /* 位置工具类 */
 .relative { position: relative; }
 .absolute { position: absolute; }
+.fixed { position: fixed; }
 
 .right-0 { right: 0; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
 .z-50 { z-index: 50; }
+
+/* ========== 以下为补齐的工具类（供 JS 动态渲染的组件使用） ========== */
+
+/* 排版补充 */
+.text-xs { font-size: var(--text-xs); }
+.text-4xl { font-size: var(--text-4xl); line-height: var(--leading-tight); }
+.font-bold { font-weight: var(--font-bold); }
+
+/* 颜色补充 */
+.text-white { color: #ffffff; }
+.text-success { color: var(--success-color); }
+.text-warning { color: var(--warning-color); }
+.text-muted { color: var(--text-muted); }
+.text-gray-600 { color: var(--gray-600); }
+.text-gray-700 { color: var(--gray-700); }
+.text-blue-600 { color: #2563eb; }
+.text-blue-700 { color: #1d4ed8; }
+.text-blue-800 { color: #1e40af; }
+.text-red-600 { color: #dc2626; }
+.text-red-700 { color: #b91c1c; }
+
+.bg-gray-100 { background-color: var(--gray-100); }
+.bg-blue-100 { background-color: #dbeafe; }
+.bg-red-100 { background-color: #fee2e2; }
+
+.border-blue-300 { border-color: #93c5fd; }
+.border-blue-400 { border-color: #60a5fa; }
+.border-red-300 { border-color: #fca5a5; }
+
+/* 间距补充 */
+.mt-4 { margin-top: var(--spacing-4); }
+.mb-2 { margin-bottom: var(--spacing-2); }
+.mr-1 { margin-right: var(--spacing-1); }
+.ml-1 { margin-left: var(--spacing-1); }
+
+.p-1 { padding: var(--spacing-1); }
+.p-3 { padding: var(--spacing-3); }
+.py-1 { padding-top: var(--spacing-1); padding-bottom: var(--spacing-1); }
+.py-8 { padding-top: var(--spacing-8); padding-bottom: var(--spacing-8); }
+.px-2 { padding-left: var(--spacing-2); padding-right: var(--spacing-2); }
+.px-3 { padding-left: var(--spacing-3); padding-right: var(--spacing-3); }
+
+/* 布局补充 */
+.justify-center { justify-content: center; }
+.items-start { align-items: flex-start; }
+.gap-1 { gap: var(--spacing-1); }
+.overflow-x-auto { overflow-x: auto; }
+
+/* 尺寸补充 */
+.w-16 { width: 4rem; }
+.h-16 { height: 4rem; }
+
+/* 边框补充 */
+.border-2 { border-width: 2px; border-style: solid; }
+.rounded { border-radius: var(--radius-md); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-full { border-radius: var(--radius-full); }
+
+/* 阴影补充 */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+
+/* 交互状态补充 */
+.opacity-50 { opacity: 0.5; }
+.cursor-pointer { cursor: pointer; }
+.cursor-not-allowed { cursor: not-allowed; }
+.duration-200 { transition-duration: 0.2s; }
+
+/* hover 变体（类名形式，用于 JS 动态生成的元素） */
+.hover\:bg-gray-200:hover { background-color: var(--gray-200); }
+.hover\:bg-red-100:hover { background-color: #fee2e2; }
+.hover\:bg-red-200:hover { background-color: #fecaca; }
+.hover\:bg-blue-100:hover { background-color: #dbeafe; }
+.hover\:bg-blue-200:hover { background-color: #bfdbfe; }
+.hover\:text-gray-700:hover { color: var(--gray-700); }
+.hover\:bg-primary\/80:hover { background-color: var(--primary-hover); }
+.hover\:bg-opacity-80:hover { opacity: 0.8; }
+
+/* 时间轴卡片子组件（卡片容器 .timeline-card 样式在 main.css 中） */
+.timeline-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.timeline-card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  flex-shrink: 0;
+}
+
+.timeline-card-content {
+  padding: 0.75rem 0;
+}
+
+.timeline-card-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-card-detail:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-card-detail-label {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.timeline-card-detail-value {
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.timeline-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.cost-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+}
+
+.sequence-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  background-color: var(--secondary-light);
+  color: var(--secondary-color);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+}
+
+/* 持续回费卡片（与关联规则卡片区分：紫色左侧饰条 + 紫色徽章） */
+.continuous-charge-card {
+  border-left: 4px solid var(--secondary-color);
+}
+
+.continuous-charge-badge {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  background-color: var(--secondary-light);
+  color: var(--secondary-color);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+}
 

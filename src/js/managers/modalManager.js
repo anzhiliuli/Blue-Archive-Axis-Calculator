@@ -24,12 +24,13 @@ class ModalManager {
             }
         });
 
-        // 监听键盘事件，按ESC键关闭模态框
+        // 监听键盘事件，按ESC键关闭模态框（优先关闭最上层/最后打开的模态框）
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                const activeModal = document.querySelector('.modal-backdrop:not(.hidden)');
-                if (activeModal) {
-                    this.hideModal(activeModal.id);
+                const activeModals = document.querySelectorAll('.modal-backdrop:not(.hidden)');
+                if (activeModals.length > 0) {
+                    const topModal = activeModals[activeModals.length - 1];
+                    this.hideModal(topModal.id);
                 }
             }
         });
@@ -255,22 +256,23 @@ class ModalManager {
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'assertive');
         toast.setAttribute('aria-atomic', 'true');
-        
+
         toast.innerHTML = `
             <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
+                <div class="toast-body"></div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto close-toast-btn" data-toast-id="${id}" aria-label="关闭"></button>
             </div>
         `;
-        
+
+        // 消息可能包含学生名/文件名等来自用户或导入数据的文本，必须用textContent写入以防XSS
+        toast.querySelector('.toast-body').textContent = message;
+
         // 添加关闭按钮事件监听器
         const closeBtn = toast.querySelector('.close-toast-btn');
         closeBtn.addEventListener('click', () => {
             this.hideToast(id);
         });
-        
+
         return toast;
     }
 
@@ -308,21 +310,14 @@ class ModalManager {
     }
 
     // 隐藏加载指示器
+    // 注意：不移除DOM元素，避免"隐藏后300ms内再次显示"时被延迟移除任务误删（竞态）
     hideLoadingIndicator() {
         const loadingIndicator = document.getElementById('loading-indicator');
         if (loadingIndicator) {
             loadingIndicator.classList.remove('show');
-            
-            // 等待动画完成后移除元素
-            setTimeout(() => {
-                if (loadingIndicator.parentNode) {
-                    loadingIndicator.parentNode.removeChild(loadingIndicator);
-                }
-            }, 300);
-            
             return true;
         }
-        
+
         return false;
     }
 

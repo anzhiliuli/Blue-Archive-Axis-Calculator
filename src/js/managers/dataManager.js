@@ -6,7 +6,10 @@ class DataManager {
         this.dataItems = [];     // 数据项列表
         this.currentCost = 0;    // 当前费用
         this.totalCost = 10;     // 总费用上限
-        this.nextId = 1;         // 用于生成唯一ID的计数器
+        // 三类实体各自独立的ID计数器，避免跨实体ID冲突
+        this.nextCharacterId = 1; // 学生ID计数器
+        this.nextRuleId = 1;      // 规则ID计数器
+        this.nextDataItemId = 1;  // 数据项ID计数器
         this.hideSpecialRows = false; // 是否隐藏特殊行
         this.continuousChargeData = []; // 持续回费设置数组
         this.initializationDuration = 0; // 初始化持续时间
@@ -45,24 +48,43 @@ class DataManager {
         this.maxHistorySize = 50; // 最大历史记录数量
     }
 
-    // 获取唯一ID
-    getNextId() {
-        return this.nextId++;
+    // 获取各类实体的唯一ID（各自独立计数）
+    getNextCharacterId() {
+        return this.nextCharacterId++;
+    }
+
+    getNextRuleId() {
+        return this.nextRuleId++;
+    }
+
+    getNextDataItemId() {
+        return this.nextDataItemId++;
+    }
+
+    // 根据现有数据推导各计数器下限，防止加载/导入后产生重复ID
+    recalcIdCounters() {
+        const maxNumericId = (arr) => arr.reduce((max, item) => {
+            const id = parseInt(item && item.id);
+            return Number.isFinite(id) && id > max ? id : max;
+        }, 0);
+        this.nextCharacterId = Math.max(this.nextCharacterId, maxNumericId(this.characters) + 1);
+        this.nextRuleId = Math.max(this.nextRuleId, maxNumericId(this.rules) + 1);
+        this.nextDataItemId = Math.max(this.nextDataItemId, maxNumericId(this.dataItems) + 1);
     }
 
     // 添加学生
     addCharacter(characterData) {
-        this.saveState();
-        // 检查学生名称是否重复
-        const nameExists = this.characters.some(character => 
+        // 先校验，校验通过后才保存撤销快照，避免失败操作污染撤销栈
+        const nameExists = this.characters.some(character =>
             character.name.toLowerCase() === characterData.name.toLowerCase()
         );
         if (nameExists) {
             throw new Error('学生名称已存在');
         }
+        this.saveState();
 
         const newCharacter = {
-            id: this.getNextId(),
+            id: this.getNextCharacterId(),
             name: characterData.name || '新学生',
             costRecoveryRate: parseFloat(characterData.costRecoveryRate) || 0,
             skillCost: parseFloat(characterData.skillCost) || 0,
@@ -76,18 +98,18 @@ class DataManager {
 
     // 更新学生
     updateCharacter(id, characterData) {
-        this.saveState();
         const index = this.characters.findIndex(character => character.id === id);
         if (index !== -1) {
-            // 检查学生名称是否重复（排除当前学生）
+            // 先校验，校验通过后才保存撤销快照，避免失败操作污染撤销栈
             if (characterData.name) {
-                const nameExists = this.characters.some(character => 
+                const nameExists = this.characters.some(character =>
                     character.id !== id && character.name.toLowerCase() === characterData.name.toLowerCase()
                 );
                 if (nameExists) {
                     throw new Error('学生名称已存在');
                 }
             }
+            this.saveState();
 
             // 处理数据以确保isChargePercentage始终为布尔值
             const processedData = { ...characterData };
@@ -109,12 +131,15 @@ class DataManager {
         this.saveState();
         const index = this.characters.findIndex(character => character.id === id);
         if (index !== -1) {
-            // 移除相关规则
-            this.rules = this.rules.filter(rule => rule.characterId !== id);
-            
-            // 移除相关数据项
+            // 仅移除目标学生包含该角色的规则
+            // 注意：rule.characterId 存储的是数据行ID（另一套ID空间），不能与学生ID比较
+            this.rules = this.rules.filter(rule =>
+                !(Array.isArray(rule.targetCharacterIds) && rule.targetCharacterIds.includes(id))
+            );
+
+            // 移除相关数据项（item.characterId 为学生ID，同一ID空间，可安全比较）
             this.dataItems = this.dataItems.filter(item => item.characterId !== id);
-            
+
             return this.characters.splice(index, 1)[0];
         }
         return null;
@@ -134,8 +159,9 @@ class DataManager {
     addRule(ruleData) {
         this.saveState();
         // 创建基础规则对象，某些规则类型可能不需要characterId
+        // 注意：characterId 此处存储的是所挂数据行的ID
         const baseRule = {
-            id: this.getNextId(),
+            id: this.getNextRuleId(),
             type: ruleData.type,
             createdAt: new Date().toISOString()
         };
@@ -261,14 +287,16 @@ class DataManager {
         this.saveState();
         const lastItem = this.dataItems[this.dataItems.length - 1];
         const defaultTime = lastItem ? this.getTimeFromItem(lastItem) + 1 : 0;
-        
+
         const newItem = {
-            id: this.getNextId(),
+            id: this.getNextDataItemId(),
             characterId: itemData.characterId,
             cost: parseFloat(itemData.cost) || 0,
             action: itemData.action || '技能',
-            time: itemData.time || defaultTime,
-            timeInterval: itemData.timeInterval || (lastItem ? this.getTimeFromItem(itemData) - this.getTimeFromItem(lastItem) : 0),
+            time: itemData.time !== undefined && itemData.time !== null ? itemData.time : defaultTime,
+            timeInterval: itemData.timeInterval !== undefined && itemData.timeInterval !== null
+                ? itemData.timeInterval
+                : (lastItem ? this.getTimeFromItem(itemData) - this.getTimeFromItem(lastItem) : 0),
             costDeduction: 0,
             remainingCost: 0,
             createdAt: new Date().toISOString(),
@@ -279,8 +307,36 @@ class DataManager {
             }
         };
         
-        this.dataItems.push(newItem);
+        // 按时间排序插入到正确位置，而不是直接追加到最后
+        const insertIndex = this.findInsertIndex(newItem);
+        this.dataItems.splice(insertIndex, 0, newItem);
         return newItem;
+    }
+
+    // 计算数据项按时间降序排列时的插入位置（初始化行始终固定在首位）
+    findInsertIndex(newItem) {
+        const items = this.dataItems;
+        // 初始化行始终占据首位，从第二行开始寻找插入点
+        const start = (items.length > 0 && items[0].action === '初始化') ? 1 : 0;
+        const newTime = this.getTimeFromItem(newItem);
+        for (let i = start; i < items.length; i++) {
+            if (this.getTimeFromItem(items[i]) < newTime) {
+                return i;
+            }
+        }
+        return items.length;
+    }
+
+    // 按时间降序重排所有数据项（初始化行始终固定在首位）
+    sortDataItemsByTime() {
+        if (this.dataItems.length <= 1) return;
+        const compare = (a, b) => this.getTimeFromItem(b) - this.getTimeFromItem(a);
+        if (this.dataItems[0].action === '初始化') {
+            const rest = this.dataItems.slice(1).sort(compare);
+            this.dataItems = [this.dataItems[0], ...rest];
+        } else {
+            this.dataItems = [...this.dataItems].sort(compare);
+        }
     }
 
     // 更新数据项
@@ -301,7 +357,11 @@ class DataManager {
                 ...itemData,
                 updatedAt: new Date().toISOString()
             };
-            return this.dataItems[index];
+            // 时间被修改后重新排序，保持表格按时间排列
+            if (itemData.time !== undefined && itemData.time !== null) {
+                this.sortDataItemsByTime();
+            }
+            return this.dataItems.find(item => item.id === id);
         }
         return null;
     }
@@ -338,35 +398,13 @@ class DataManager {
         if (index !== -1) {
             // 获取要删除的数据项
             const deletedItem = this.dataItems[index];
-            // 删除关联的规则
+            // 删除挂在该行上的规则（rule.characterId 为数据行ID，同一ID空间）
             this.rules = this.rules.filter(rule => rule.characterId !== id);
             // 删除数据项
             this.dataItems.splice(index, 1);
-            // 如果删除的是特殊行，清除相关效果
-            if (deletedItem.action === '回费' || deletedItem.action === '减费') {
-                // 重置规则计数器
-                // 这将确保水白的减费效果和瞬的回费效果重新计算
-            }
             return deletedItem;
         }
         return null;
-    }
-
-    // 批量删除数据项
-    deleteDataItems(ids) {
-        this.saveState();
-        // 获取要删除的数据项
-        const deletedItems = this.dataItems.filter(item => ids.includes(item.id));
-        // 删除关联的规则
-        this.rules = this.rules.filter(rule => !ids.includes(rule.characterId));
-        // 删除数据项
-        this.dataItems = this.dataItems.filter(item => !ids.includes(item.id));
-        // 如果删除了特殊行，清除相关效果
-        const hasSpecialRow = deletedItems.some(item => item.action === '回费' || item.action === '减费');
-        if (hasSpecialRow) {
-            // 重置规则计数器
-            // 这将确保水白的减费效果和瞬的回费效果重新计算
-        }
     }
 
     // 获取过滤后的数据项列表（用于UI显示）
@@ -470,21 +508,6 @@ class DataManager {
         return this.getTimeFromItem(lastItem);
     }
 
-    // 清空所有数据
-    clearAllData() {
-        this.saveState();
-        this.characters = [];
-        this.rules = [];
-        this.dataItems = [];
-        this.currentCost = 0;
-        this.nextId = 1;
-        this.hideSpecialRows = false;
-        this.continuousChargeData = [];
-        this.initializationDuration = 0;
-        this.currentPage = 1;
-        this.pageSize = 10;
-    }
-
     // 保存数据到本地存储
     saveToLocalStorage() {
         try {
@@ -494,12 +517,16 @@ class DataManager {
                 dataItems: this.dataItems,
                 currentCost: this.currentCost,
                 totalCost: this.totalCost,
-                nextId: this.nextId,
+                nextCharacterId: this.nextCharacterId,
+                nextRuleId: this.nextRuleId,
+                nextDataItemId: this.nextDataItemId,
                 initializationDuration: this.initializationDuration,
                 hideSpecialRows: this.hideSpecialRows,
+                showCompleteData: this.showCompleteData,
                 continuousChargeData: this.continuousChargeData,
                 currentPage: this.currentPage,
                 pageSize: this.pageSize,
+                exportInfo: this.exportInfo,
                 savedAt: new Date().toISOString()
             };
             localStorage.setItem('blueArchiveCalculatorData', JSON.stringify(data));
@@ -515,19 +542,40 @@ class DataManager {
         try {
             const data = localStorage.getItem('blueArchiveCalculatorData');
             if (data) {
-                this.saveState();
                 const parsedData = JSON.parse(data);
-                this.characters = parsedData.characters || [];
-                this.rules = parsedData.rules || [];
-                this.dataItems = parsedData.dataItems || [];
-                this.currentCost = parsedData.currentCost || 0;
-                this.totalCost = parsedData.totalCost || 10;
-                this.nextId = parsedData.nextId || 1;
-                this.initializationDuration = parsedData.initializationDuration || 0;
-                this.hideSpecialRows = parsedData.hideSpecialRows || false;
-                this.continuousChargeData = parsedData.continuousChargeData || [];
-                this.currentPage = parsedData.currentPage || 1;
-                this.pageSize = parsedData.pageSize || 10;
+                if (!parsedData || typeof parsedData !== 'object') {
+                    return false;
+                }
+                this.characters = Array.isArray(parsedData.characters) ? parsedData.characters : [];
+                this.rules = Array.isArray(parsedData.rules) ? parsedData.rules : [];
+                this.dataItems = Array.isArray(parsedData.dataItems) ? parsedData.dataItems : [];
+                this.currentCost = Number(parsedData.currentCost) || 0;
+                this.totalCost = Number(parsedData.totalCost) || 10;
+                this.initializationDuration = Number(parsedData.initializationDuration) || 0;
+                this.hideSpecialRows = !!parsedData.hideSpecialRows;
+                this.showCompleteData = !!parsedData.showCompleteData;
+                this.continuousChargeData = Array.isArray(parsedData.continuousChargeData) ? parsedData.continuousChargeData : [];
+                this.currentPage = Number(parsedData.currentPage) || 1;
+                this.pageSize = Number(parsedData.pageSize) || 10;
+                if (parsedData.exportInfo && typeof parsedData.exportInfo === 'object') {
+                    this.exportInfo = {
+                        positions: Array.isArray(parsedData.exportInfo.positions) ? parsedData.exportInfo.positions : ["", "", "", ""],
+                        initialSkills: Array.isArray(parsedData.exportInfo.initialSkills) ? parsedData.exportInfo.initialSkills : ["", "", ""],
+                        videoAxisLink: parsedData.exportInfo.videoAxisLink || ""
+                    };
+                }
+                // 根据现有数据推导ID计数器，兼容旧版单一 nextId 的存档
+                const legacyNextId = Number(parsedData.nextId) || 1;
+                this.nextCharacterId = Math.max(1, legacyNextId);
+                this.nextRuleId = Math.max(1, legacyNextId);
+                this.nextDataItemId = Math.max(1, legacyNextId);
+                this.nextCharacterId = Number(parsedData.nextCharacterId) || this.nextCharacterId;
+                this.nextRuleId = Number(parsedData.nextRuleId) || this.nextRuleId;
+                this.nextDataItemId = Number(parsedData.nextDataItemId) || this.nextDataItemId;
+                this.recalcIdCounters();
+                // 加载完成的状态作为撤销基线，清空历史栈
+                this.undoStack = [];
+                this.redoStack = [];
                 return true;
             }
             return false;
@@ -545,15 +593,18 @@ class DataManager {
             dataItems: this.dataItems,
             currentCost: this.currentCost,
             totalCost: this.totalCost,
-            nextId: this.nextId,
+            nextCharacterId: this.nextCharacterId,
+            nextRuleId: this.nextRuleId,
+            nextDataItemId: this.nextDataItemId,
             initializationDuration: this.initializationDuration,
             hideSpecialRows: this.hideSpecialRows,
+            showCompleteData: this.showCompleteData,
             continuousChargeData: this.continuousChargeData,
             currentPage: this.currentPage,
             pageSize: this.pageSize,
             exportInfo: this.exportInfo, // 新增：导出信息
             exportedAt: new Date().toISOString(),
-            version: '1.0.0',
+            version: '1.1.0',
             fileName: `碧蓝档案轴-数据-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}` // 添加默认文件名
         };
     }
@@ -561,18 +612,31 @@ class DataManager {
     // 导入数据
     importData(data) {
         try {
+            if (!data || typeof data !== 'object') {
+                throw new Error('导入的数据格式无效');
+            }
+            // 基础结构与类型校验，防止非法数据破坏运行时状态
+            if (data.characters !== undefined && !Array.isArray(data.characters)) {
+                throw new Error('学生列表格式无效');
+            }
+            if (data.rules !== undefined && !Array.isArray(data.rules)) {
+                throw new Error('规则列表格式无效');
+            }
+            if (data.dataItems !== undefined && !Array.isArray(data.dataItems)) {
+                throw new Error('数据项列表格式无效');
+            }
             this.saveState();
-            if (data.characters) this.characters = data.characters;
-            if (data.rules) this.rules = data.rules;
-            if (data.dataItems) this.dataItems = data.dataItems;
-            if (data.currentCost) this.currentCost = data.currentCost;
-            if (data.totalCost) this.totalCost = data.totalCost;
-            if (data.nextId) this.nextId = data.nextId;
-            if (data.initializationDuration !== undefined) this.initializationDuration = data.initializationDuration;
-            if (data.hideSpecialRows !== undefined) this.hideSpecialRows = data.hideSpecialRows;
+            if (Array.isArray(data.characters)) this.characters = data.characters;
+            if (Array.isArray(data.rules)) this.rules = data.rules;
+            if (Array.isArray(data.dataItems)) this.dataItems = data.dataItems;
+            if (data.currentCost != null) this.currentCost = Number(data.currentCost) || 0;
+            if (data.totalCost != null) this.totalCost = Number(data.totalCost) || 10;
+            if (data.initializationDuration != null) this.initializationDuration = Number(data.initializationDuration) || 0;
+            if (data.hideSpecialRows != null) this.hideSpecialRows = !!data.hideSpecialRows;
+            if (data.showCompleteData != null) this.showCompleteData = !!data.showCompleteData;
             if (data.continuousChargeData !== undefined) this.continuousChargeData = Array.isArray(data.continuousChargeData) ? data.continuousChargeData : [];
-            if (data.currentPage !== undefined) this.currentPage = data.currentPage;
-            if (data.pageSize !== undefined) this.pageSize = data.pageSize;
+            if (data.currentPage != null) this.currentPage = Number(data.currentPage) || 1;
+            if (data.pageSize != null) this.pageSize = Number(data.pageSize) || 10;
             if (data.exportInfo !== undefined) {
                 // 检查exportInfo是否有效（至少有一个字段有值）
                 const hasValidInfo = 
@@ -603,6 +667,8 @@ class DataManager {
                     videoAxisLink: ""
                 };
             }
+            // 导入数据自带ID，重新推导各计数器避免后续生成重复ID
+            this.recalcIdCounters();
             return true;
         } catch (error) {
             console.error('导入数据失败:', error);
@@ -625,7 +691,8 @@ class DataManager {
         this.saveState();
         this.characters = [];
         this.rules = [];
-        this.nextId = 1;
+        // 仅重置学生ID计数器，规则/数据项计数器保持连续
+        this.nextCharacterId = 1;
     }
 
     // 清空数据项列表
@@ -633,6 +700,52 @@ class DataManager {
         this.saveState();
         this.dataItems = [];
         this.currentCost = 0;
+    }
+
+    /**
+     * 重置并初始化数据（初始化流程专用）
+     * 将清空数据项/规则/持续回费/导出信息、设置初始化时间并生成默认初始化行
+     * 合并为一次原子操作：仅创建一次撤销快照，避免中间态进入撤销栈
+     * @param {number} initialTimeSeconds - 初始化时间（秒）
+     */
+    resetForInitialization(initialTimeSeconds) {
+        this.saveState();
+        
+        this.dataItems = [];
+        this.rules = [];
+        this.currentCost = 0;
+        this.continuousChargeData = [];
+        this.exportInfo = {
+            positions: ["", "", "", ""],
+            initialSkills: ["", "", ""],
+            videoAxisLink: ""
+        };
+        this.initializationDuration = initialTimeSeconds;
+        
+        // 生成初始化默认行（使用统一ID计数器，避免字符串ID混入数值ID体系）
+        const characters = this.getCharacters();
+        this.dataItems.push({
+            id: this.getNextDataItemId(),
+            characterId: characters.length > 0 ? characters[0].id : 0,
+            cost: 0,
+            action: '初始化',
+            time: initialTimeSeconds,
+            timeInterval: 0,
+            costDeduction: 0,
+            remainingCost: 0
+        });
+    }
+
+    /**
+     * 设置导出信息（站位/初始技能/视频轴链接）
+     * @param {{positions: string[], initialSkills: string[], videoAxisLink: string}} info
+     */
+    setExportInfo(info) {
+        this.exportInfo = {
+            positions: Array.isArray(info.positions) ? info.positions : ["", "", "", ""],
+            initialSkills: Array.isArray(info.initialSkills) ? info.initialSkills : ["", "", ""],
+            videoAxisLink: info.videoAxisLink || ""
+        };
     }
 
     // 设置初始化时间（可选功能）
@@ -662,15 +775,19 @@ class DataManager {
         this.saveState();
         this.continuousChargeData = [];
     }
+
+    // 删除单条持续回费设置
+    deleteContinuousCharge(index) {
+        this.saveState();
+        if (Array.isArray(this.continuousChargeData) && index >= 0 && index < this.continuousChargeData.length) {
+            return this.continuousChargeData.splice(index, 1)[0];
+        }
+        return null;
+    }
     
     // 设置当前费用
     setCurrentCost(cost) {
         this.currentCost = cost;
-    }
-    
-    // 添加数据项到末尾
-    pushDataItem(item) {
-        this.dataItems.push(item);
     }
     
     // 保存当前状态到撤销栈
@@ -682,7 +799,9 @@ class DataManager {
             dataItems: JSON.parse(JSON.stringify(this.dataItems)),
             currentCost: this.currentCost,
             totalCost: this.totalCost,
-            nextId: this.nextId,
+            nextCharacterId: this.nextCharacterId,
+            nextRuleId: this.nextRuleId,
+            nextDataItemId: this.nextDataItemId,
             hideSpecialRows: this.hideSpecialRows,
             continuousChargeData: JSON.parse(JSON.stringify(this.continuousChargeData)),
             initializationDuration: this.initializationDuration,
@@ -718,7 +837,9 @@ class DataManager {
             dataItems: JSON.parse(JSON.stringify(this.dataItems)),
             currentCost: this.currentCost,
             totalCost: this.totalCost,
-            nextId: this.nextId,
+            nextCharacterId: this.nextCharacterId,
+            nextRuleId: this.nextRuleId,
+            nextDataItemId: this.nextDataItemId,
             hideSpecialRows: this.hideSpecialRows,
             continuousChargeData: JSON.parse(JSON.stringify(this.continuousChargeData)),
             initializationDuration: this.initializationDuration,
@@ -750,7 +871,9 @@ class DataManager {
             dataItems: JSON.parse(JSON.stringify(this.dataItems)),
             currentCost: this.currentCost,
             totalCost: this.totalCost,
-            nextId: this.nextId,
+            nextCharacterId: this.nextCharacterId,
+            nextRuleId: this.nextRuleId,
+            nextDataItemId: this.nextDataItemId,
             hideSpecialRows: this.hideSpecialRows,
             continuousChargeData: JSON.parse(JSON.stringify(this.continuousChargeData)),
             initializationDuration: this.initializationDuration,
@@ -776,7 +899,9 @@ class DataManager {
         this.dataItems = state.dataItems;
         this.currentCost = state.currentCost;
         this.totalCost = state.totalCost;
-        this.nextId = state.nextId;
+        this.nextCharacterId = state.nextCharacterId;
+        this.nextRuleId = state.nextRuleId;
+        this.nextDataItemId = state.nextDataItemId;
         this.hideSpecialRows = state.hideSpecialRows;
         this.continuousChargeData = state.continuousChargeData;
         this.initializationDuration = state.initializationDuration;

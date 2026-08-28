@@ -4,6 +4,76 @@ class Calculator {
         this.dataManager = dataManager;
         this.timeStep = 0.1;    // 时间步长（秒）
         this.ruleCounters = {}; // 规则计数器，用于跟踪减费效果的生效次数
+        this._simCache = null;  // 模拟缓存：批量模拟期间复用数据引用与派生结构
+    }
+
+    // 开启模拟缓存（幂等，可嵌套）
+    _beginSim() {
+        if (this._simCache) return;
+        const characters = this.dataManager.getCharacters();
+        const rules = this.dataManager.getRules();
+        const dataItems = this.dataManager.getAllDataItems();
+        const charactersById = new Map(characters.map(c => [c.id, c]));
+        const dataItemsById = new Map(dataItems.map(i => [i.id, i]));
+
+        // 预构建：按学生分组的回费规则、费用规则分类、持续回费设置
+        const chargeRulesByChar = new Map();
+        const reductionRules = [];
+        const changeRules = [];
+        for (const rule of rules) {
+            if (rule.type === 'costReduction') {
+                reductionRules.push(rule);
+            } else if (rule.type === 'costChange') {
+                changeRules.push(rule);
+            } else if (rule.type === 'chargeIncrease' && Array.isArray(rule.targetCharacterIds)) {
+                for (const cid of rule.targetCharacterIds) {
+                    if (!chargeRulesByChar.has(cid)) chargeRulesByChar.set(cid, []);
+                    chargeRulesByChar.get(cid).push(rule);
+                }
+            }
+        }
+        const continuousByChar = new Map();
+        if (Array.isArray(this.dataManager.continuousChargeData)) {
+            for (const setting of this.dataManager.continuousChargeData) {
+                const targetItem = dataItemsById.get(setting.targetRowId);
+                if (targetItem && targetItem.characterId != null) {
+                    if (!continuousByChar.has(targetItem.characterId)) continuousByChar.set(targetItem.characterId, []);
+                    continuousByChar.get(targetItem.characterId).push({ setting, targetItem });
+                }
+            }
+        }
+
+        this._simCache = {
+            characters,
+            charactersById,
+            dataItems,
+            dataItemsById,
+            chargeRulesByChar,
+            reductionRules,
+            changeRules,
+            continuousByChar,
+            chargeIncreaseCharacter: characters.find(c => c.isChargePercentage) || null,
+            hasSuibai: characters.some(c => c.name === '水白'),
+            hasSuibaiSpecialRow: dataItems.some(item =>
+                item.action === '减费' && charactersById.get(item.characterId)?.name === '水白'
+            )
+        };
+    }
+
+    // 结束模拟缓存
+    _endSim() {
+        this._simCache = null;
+    }
+
+    // 在模拟缓存上下文中执行批量计算（未开启缓存时自动开启并在结束后释放）
+    withSimCache(fn) {
+        const hadCache = !!this._simCache;
+        if (!hadCache) this._beginSim();
+        try {
+            return fn();
+        } finally {
+            if (!hadCache) this._endSim();
+        }
     }
 
     // 计算总回费速度（考虑所有学生和持续回费功能）
@@ -12,10 +82,11 @@ class Calculator {
         if (resetCounters) {
             this.resetRuleCounters();
         }
-        
-        const characters = this.dataManager.getCharacters();
+
+        const cache = this._simCache;
+        const characters = cache ? cache.characters : this.dataManager.getCharacters();
         let totalRecoveryRate = 0;
-        
+
         // 为每个学生计算调整后的回费速度，然后相加得到总回费速度
         characters.forEach(char => {
             // 应用费用效果规则和学生回费属性
@@ -23,73 +94,33 @@ class Calculator {
             const adjustedRecoveryRate = this.applyChargeIncreaseRules(char.id, char.costRecoveryRate, currentTime);
             totalRecoveryRate += adjustedRecoveryRate;
         });
-        
+
         return totalRecoveryRate;
     }
     
-    // 计算所有学生的总费用恢复
-    calculateTotalCostRecovery(timeElapsed, currentTime = 0) {
-        // 使用细粒度时间步长，每0.001秒计算一次（毫秒级精度）
-        const timeStep = 0.001;
-        let totalRecovery = 0;
-        let remainingTime = timeElapsed;
-        let currentSimulationTime = currentTime;
-        
-        // 细粒度计算，每0.001秒计算一次
-        while (remainingTime > 0) {
-            // 计算当前时间步长的实际时长（最后一步可能小于timeStep）
-            const currentStepTime = Math.min(timeStep, remainingTime);
-            
-            // 获取当前时间点的回费速度
-            const currentRecoveryRate = this.calculateTotalRecoveryRate(currentSimulationTime);
-            
-            // 计算当前时间步长内恢复的费用
-            totalRecovery += currentRecoveryRate * currentStepTime;
-            
-            // 更新剩余时间和当前模拟时间
-            remainingTime -= currentStepTime;
-            currentSimulationTime -= currentStepTime;
-        }
-        
-        return parseFloat(totalRecovery.toFixed(3));
-    }
-
-    // 计算技能使用费用
-    calculateSkillCost(character, useCount = 1) {
-        // 基础费用 + 每使用一次的额外费用 * 使用次数
-        const cost = character.skillCost + (character.costIncrease * (useCount - 1));
-        return parseFloat(cost.toFixed(2));
-    }
-
-    // 计算单个学生的费用恢复
-    calculateCostRecovery(character, timeElapsed, currentTime = 0) {
-        // 应用费用效果规则和学生回费属性
-        const adjustedRecoveryRate = this.applyChargeIncreaseRules(character.id, character.costRecoveryRate, currentTime);
-        const recovery = adjustedRecoveryRate * timeElapsed;
-        return parseFloat(recovery.toFixed(2));
-    }
-
     // 重置规则计数器
     resetRuleCounters() {
         this.ruleCounters = {};
     }
-    
+
     // 应用关联规则费用变化
     applyRuleCostChanges(characterId, baseCost, itemId = null, costReductionRules = null, costChangeRules = null, useCount = 1, isPreAddValidation = false) {
-        // 如果传入了预筛选的规则，则使用它们，否则获取所有规则
-        const rules = this.dataManager.getRules();
-        const reductionRules = costReductionRules || rules.filter(rule => rule.type === 'costReduction');
-        const changeRules = costChangeRules || rules.filter(rule => rule.type === 'costChange');
-        
+        // 如果传入了预筛选的规则，则使用它们，否则从缓存/数据管理器获取
+        const cache = this._simCache;
+        const reductionRules = costReductionRules
+            || (cache ? cache.reductionRules : this.dataManager.getRules().filter(rule => rule.type === 'costReduction'));
+        const changeRules = costChangeRules
+            || (cache ? cache.changeRules : this.dataManager.getRules().filter(rule => rule.type === 'costChange'));
+
         let finalCost = baseCost;
         let reductionValue = 0;
         let matchedRule = null;
-        
+
         // 应用水白的第一次使用减费效果（基于特殊行）
-        const character = this.dataManager.getCharacterById(characterId);
-        const hasSuibai = this.dataManager.getCharacters().some(char => char.name === '水白');
+        const character = cache ? cache.charactersById.get(characterId) : this.dataManager.getCharacterById(characterId);
+        const hasSuibai = cache ? cache.hasSuibai : this.dataManager.getCharacters().some(char => char.name === '水白');
         // 检查是否有水白的特殊行
-        const hasSuibaiSpecialRow = this.dataManager.getAllDataItems().some(item => 
+        const hasSuibaiSpecialRow = cache ? cache.hasSuibaiSpecialRow : this.dataManager.getAllDataItems().some(item =>
             item.action === '减费' && this.dataManager.getCharacterById(item.characterId)?.name === '水白'
         );
         if (hasSuibai && hasSuibaiSpecialRow && character && character.name !== '水白' && useCount === 1) {
@@ -151,25 +182,27 @@ class Calculator {
     
     // 应用费用效果规则和学生回费属性到单个学生
     applyChargeIncreaseRules(characterId, recoveryRate, currentTime = 0) {
-        const rules = this.dataManager.getRules();
-        const character = this.dataManager.getCharacterById(characterId);
-        
+        const cache = this._simCache;
+
         // 1. 先获取全局回费增加属性（所有学生使用相同的回费增加百分比）
         // 查找设置了回费增加的学生（isChargePercentage为true的学生）
-        const characters = this.dataManager.getCharacters();
-        const chargeIncreaseCharacter = characters.find(char => char.isChargePercentage);
+        const chargeIncreaseCharacter = cache
+            ? cache.chargeIncreaseCharacter
+            : this.dataManager.getCharacters().find(char => char.isChargePercentage);
         let totalPercentageIncrease = chargeIncreaseCharacter && chargeIncreaseCharacter.costIncrease ? chargeIncreaseCharacter.costIncrease : 0;
-        
+
         // 2. 收集所有适用的费用效果规则
         let fixedChargeModifications = 0;
-        
+
         // 3. 处理费用效果规则
-        // 首先筛选出所有匹配的费用效果规则
-        const chargeIncreaseRules = rules.filter(rule => {
-            return rule.type === 'chargeIncrease' && 
-                   Array.isArray(rule.targetCharacterIds) && 
-                   rule.targetCharacterIds.includes(characterId);
-        });
+        // 获取作用于当前学生的回费规则（缓存中已按学生分组）
+        const chargeIncreaseRules = cache
+            ? (cache.chargeRulesByChar.get(characterId) || [])
+            : this.dataManager.getRules().filter(rule => {
+                return rule.type === 'chargeIncrease' &&
+                       Array.isArray(rule.targetCharacterIds) &&
+                       rule.targetCharacterIds.includes(characterId);
+            });
         
         // 将currentTime转换为秒数（如果是字符串格式）
         let currentTimeInSeconds = currentTime;
@@ -230,53 +263,51 @@ class Calculator {
         }
         
         // 4. 处理持续回费功能
-        const continuousChargeSettings = this.dataManager.continuousChargeData;
         let continuousChargeIncrease = 0;
-        
-        // 遍历所有持续回费设置
-        if (Array.isArray(continuousChargeSettings)) {
-            // 筛选出当前学生的持续回费设置
-            const characterContinuousCharges = continuousChargeSettings.filter(continuousChargeData => {
-                const targetItem = this.dataManager.dataItems.find(item => item.id == continuousChargeData.targetRowId);
-                return targetItem && targetItem.characterId == characterId;
-            });
-            
+
+        // 获取当前学生的持续回费设置（缓存中已按学生分组并解析目标行）
+        const characterContinuousCharges = cache
+            ? (cache.continuousByChar.get(characterId) || [])
+            : (() => {
+                const settings = this.dataManager.continuousChargeData;
+                if (!Array.isArray(settings)) return [];
+                return settings
+                    .map(continuousChargeData => ({
+                        setting: continuousChargeData,
+                        targetItem: this.dataManager.dataItems.find(item => item.id == continuousChargeData.targetRowId)
+                    }))
+                    .filter(entry => entry.targetItem && entry.targetItem.characterId == characterId);
+            })();
+
+        if (characterContinuousCharges.length > 0) {
             // 按目标行时间降序排序（最新的效果优先）
-            characterContinuousCharges.sort((a, b) => {
-                const targetItemA = this.dataManager.dataItems.find(item => item.id == a.targetRowId);
-                const targetItemB = this.dataManager.dataItems.find(item => item.id == b.targetRowId);
-                return targetItemB.time - targetItemA.time;
-            });
-            
+            characterContinuousCharges.sort((a, b) => b.targetItem.time - a.targetItem.time);
+
             // 查找第一个匹配时间范围的效果
-            for (const continuousChargeData of characterContinuousCharges) {
-                const { targetRowId, delayTime, duration, recoveryIncrease } = continuousChargeData;
-                
-                // 获取目标数据项
-                const targetItem = this.dataManager.dataItems.find(item => item.id == targetRowId);
-                if (targetItem) {
-                    // 目标行时间已经是秒数（数字类型）
-                    const targetTimeSeconds = targetItem.time;
-                    
-                    // 计算开始生效时间：目标行时间（秒） - 延迟时间
-                    const startTime = targetTimeSeconds - delayTime;
-                    // 计算结束生效时间：开始生效时间 - 持续时间
-                    const endTime = startTime - duration;
-                    
-                    // 将currentTime转换为秒数（如果是字符串格式）
-                    let currentTimeInSeconds = currentTime;
-                    if (typeof currentTime === 'string') {
-                        const [currMinutes, currSeconds] = currentTime.split(':');
-                        currentTimeInSeconds = parseInt(currMinutes) * 60 + parseFloat(currSeconds);
-                    }
-                    
-                    // 检查当前时间是否在生效范围内
-                    // 注意：不包括startTime本身，避免影响目标行的费用计算
-                    if (currentTimeInSeconds >= endTime && currentTimeInSeconds < startTime) {
-                        // 当前学生是持续回费的目标学生，使用第一个匹配的效果（最新的）
-                        continuousChargeIncrease = recoveryIncrease;
-                        break; // 找到第一个匹配的效果，跳出循环
-                    }
+            for (const { setting, targetItem } of characterContinuousCharges) {
+                const { delayTime, duration, recoveryIncrease } = setting;
+
+                // 目标行时间已经是秒数（数字类型）
+                const targetTimeSeconds = targetItem.time;
+
+                // 计算开始生效时间：目标行时间（秒） - 延迟时间
+                const startTime = targetTimeSeconds - delayTime;
+                // 计算结束生效时间：开始生效时间 - 持续时间
+                const endTime = startTime - duration;
+
+                // 将currentTime转换为秒数（如果是字符串格式）
+                let currentTimeInSeconds = currentTime;
+                if (typeof currentTime === 'string') {
+                    const [currMinutes, currSeconds] = currentTime.split(':');
+                    currentTimeInSeconds = parseInt(currMinutes) * 60 + parseFloat(currSeconds);
+                }
+
+                // 检查当前时间是否在生效范围内
+                // 注意：不包括startTime本身，避免影响目标行的费用计算
+                if (currentTimeInSeconds >= endTime && currentTimeInSeconds < startTime) {
+                    // 当前学生是持续回费的目标学生，使用第一个匹配的效果（最新的）
+                    continuousChargeIncrease = recoveryIncrease;
+                    break; // 找到第一个匹配的效果，跳出循环
                 }
             }
         }
@@ -292,66 +323,19 @@ class Calculator {
         
         // 8. 确保回费速度不小于0
         finalRecoveryRate = Math.max(0, finalRecoveryRate);
-        
+
         return finalRecoveryRate;
-    }
-
-    // 计算单个数据项的费用变化
-    calculateItemCost(item, previousCost) {
-        const character = this.dataManager.getCharacterById(item.characterId);
-        if (!character) {
-            // 找不到学生时，返回默认值
-            return {
-                remainingCost: parseFloat(previousCost.toFixed(3)),
-                costDeduction: 0
-            };
-        }
-
-        // 计算时间间隔
-        const timeInterval = parseFloat(item.timeInterval) || 0;
-        
-        // 当前时间 = 数据项的时间
-        const currentTime = parseFloat(item.time) || 0;
-        
-        // 计算费用恢复（使用所有学生的总回费速度）
-        const recoveredCost = this.calculateTotalCostRecovery(timeInterval, currentTime);
-        let newCost = previousCost + recoveredCost;
-        
-        // 确保费用不超过总费用上限
-        const totalCost = this.dataManager.totalCost;
-        newCost = Math.min(newCost, totalCost);
-        
-        // 计算并扣除费用（无论动作类型）
-        let costDeduction = 0;
-        // 对于没有costChange规则的数据项，使用学生的技能费用作为基础费用
-        // 对于有costChange规则的数据项，会在applyRuleCostChanges中被覆盖
-        const baseCost = character.skillCost;
-        
-        // 跟踪学生的技能使用次数
-        const useCountKey = `useCount_${item.characterId}`;
-        if (!this.ruleCounters[useCountKey]) {
-            this.ruleCounters[useCountKey] = 0;
-        }
-        this.ruleCounters[useCountKey]++;
-        const useCount = this.ruleCounters[useCountKey];
-        
-        // 传递使用次数给applyRuleCostChanges
-        const finalCost = this.applyRuleCostChanges(item.characterId, baseCost, item.id, null, null, useCount);
-        
-        // 确保费用足够
-        costDeduction = Math.min(newCost, finalCost);
-        
-        // 剩余费用 = 当前费用 - 费用扣除
-        const remainingCost = parseFloat((newCost - costDeduction).toFixed(3));
-        
-        return {
-            remainingCost: remainingCost,
-            costDeduction: parseFloat(costDeduction.toFixed(3))
-        };
     }
 
     // 重新计算所有数据项 - 性能优化版本
     recalculateAllItems() {
+        // 批量模拟期间启用缓存，避免每个时间步重复克隆/筛选数据
+        return this.withSimCache(() => this._recalculateAllItemsInner());
+    }
+
+    _recalculateAllItemsInner() {
+        // 计算按数组顺序迭代（上一行 = 数组前一项），先确保数据按时间降序排列
+        this.dataManager.sortDataItemsByTime();
         const items = this.dataManager.getAllDataItems();
         const rules = this.dataManager.getRules();
         const characters = this.dataManager.getCharacters();
@@ -423,18 +407,31 @@ class Calculator {
                     } else {
                         // 使用细粒度时间步长模拟，适应各种回费速度变化
                         const timeStep = 0.001; // 0.001秒为步长（毫秒级精度）
+                        const maxIterations = 1000000; // 安全上限，防止异常情况下死循环
                         let elapsedTime = 0;
                         let recoveredCost = 0;
                         let currentSimulationTime = previousItem.time;
-                        
+                        let iterations = 0;
+
                         // 模拟费用恢复过程，直到达到所需费用
                         while (recoveredCost < requiredCost) {
                             // 获取当前时间点的回费速度
                             const currentRecoveryRate = this.calculateTotalRecoveryRate(currentSimulationTime);
-                            
+
+                            // 回费速度为0时无法恢复费用，中止模拟避免页面挂死
+                            if (!(currentRecoveryRate > 0)) {
+                                break;
+                            }
+
+                            // 迭代次数安全上限
+                            if (++iterations > maxIterations) {
+                                console.warn('recalculateAllItems: 费用模拟迭代超过安全上限，已中止当前行的模拟');
+                                break;
+                            }
+
                             // 计算当前时间步长内恢复的费用
                             const stepRecovery = currentRecoveryRate * timeStep;
-                            
+
                             // 检查是否会超出所需费用
                             if (recoveredCost + stepRecovery >= requiredCost) {
                                 // 计算刚好达到所需费用的时间
@@ -449,7 +446,7 @@ class Calculator {
                                 currentSimulationTime -= timeStep;
                             }
                         }
-                        
+
                         // 设置时间间隔，保留3位小数（毫秒级精度）
                         item.timeInterval = parseFloat(elapsedTime.toFixed(3));
                     }
@@ -527,122 +524,8 @@ class Calculator {
         
         // 更新数据管理器中的当前费用
         this.dataManager.setCurrentCost(currentCost);
-        
+
         return items;
-    }
-
-    // 模拟费用随时间的变化
-    simulateCostOverTime(duration, characters, initialCost = 0) {
-        const results = [];
-        let currentCost = initialCost;
-        let currentTime = 0;
-        
-        // 使用毫秒级时间步长
-        const timeStep = 0.001;
-        
-        while (currentTime <= duration) {
-            // 计算所有学生的总费用恢复
-            const recoveredCost = this.calculateTotalCostRecovery(timeStep, currentTime);
-            
-            // 更新当前费用
-            currentCost += recoveredCost;
-            currentCost = Math.min(currentCost, this.dataManager.totalCost);
-            
-            // 记录结果，使用3位小数精度
-            results.push({
-                time: parseFloat(currentTime.toFixed(3)),
-                cost: parseFloat(currentCost.toFixed(3))
-            });
-            
-            // 增加时间
-            currentTime += timeStep;
-        }
-        
-        return results;
-    }
-
-    // 计算最优技能释放顺序
-    calculateOptimalSkillOrder(characters, duration) {
-        // 简单的贪心算法：优先释放费用最低的技能
-        const skillCosts = characters.map(character => ({
-            characterId: character.id,
-            cost: character.skillCost
-        }));
-        
-        // 按费用从低到高排序
-        skillCosts.sort((a, b) => a.cost - b.cost);
-        
-        // 模拟技能释放
-        const result = [];
-        let currentCost = 0;
-        let currentTime = 0;
-        let useCounts = {};
-        
-        // 使用毫秒级时间步长
-        const timeStep = 0.001;
-        
-        while (currentTime <= duration) {
-            // 计算费用恢复，使用毫秒级时间步长
-            const totalRecovery = this.calculateTotalCostRecovery(timeStep, currentTime);
-            currentCost += totalRecovery;
-            currentCost = Math.min(currentCost, this.dataManager.totalCost);
-            
-            // 尝试释放技能
-            for (const skillInfo of skillCosts) {
-                const character = characters.find(c => c.id === skillInfo.characterId);
-                if (!character) continue;
-                
-                // 计算当前使用次数
-                useCounts[skillInfo.characterId] = (useCounts[skillInfo.characterId] || 0) + 1;
-                
-                // 计算技能费用
-                const skillCost = this.calculateSkillCost(character, useCounts[skillInfo.characterId]);
-                const finalCost = this.applyRuleCostChanges(skillInfo.characterId, skillCost, null, null, null, useCounts[skillInfo.characterId]);
-                
-                // 如果费用足够，释放技能
-                if (currentCost >= finalCost) {
-                    result.push({
-                        time: parseFloat(currentTime.toFixed(3)), // 使用3位小数精度
-                        characterId: skillInfo.characterId,
-                        characterName: character.name,
-                        action: '使用技能',
-                        costBefore: parseFloat(currentCost.toFixed(3)), // 使用3位小数精度
-                        costUsed: parseFloat(finalCost.toFixed(3)), // 使用3位小数精度
-                        costAfter: parseFloat((currentCost - finalCost).toFixed(3)) // 使用3位小数精度
-                    });
-                    
-                    currentCost -= finalCost;
-                    break;
-                }
-            }
-            
-            // 增加时间，使用毫秒级时间步长
-            currentTime += timeStep;
-        }
-        
-        return result;
-    }
-
-    // 验证费用是否足够执行操作
-    canPerformAction(character, action, currentCost) {
-        if (action !== '技能') return true;
-        
-        // 预测下一次使用次数
-        const useCountKey = `useCount_${character.id}`;
-        const currentUseCount = this.ruleCounters[useCountKey] || 0;
-        const nextUseCount = currentUseCount + 1;
-        
-        const skillCost = this.calculateSkillCost(character, nextUseCount);
-        const finalCost = this.applyRuleCostChanges(character.id, skillCost, null, null, null, nextUseCount);
-        
-        return currentCost >= finalCost;
-    }
-
-    // 计算费用效率（每秒恢复的费用）
-    calculateCostEfficiency(character) {
-        // 应用费用效果规则和学生回费属性
-        const adjustedRecoveryRate = this.applyChargeIncreaseRules(character.id, character.costRecoveryRate);
-        return parseFloat(adjustedRecoveryRate.toFixed(2));
     }
 
     // 计算总费用效率（所有学生）
